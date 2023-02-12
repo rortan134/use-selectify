@@ -23,9 +23,9 @@ export default defineConfig((configEnv) => ({
   build: {
     lib: {
       entry: resolve('src', 'component/index.ts'),
-      name: 'ReactViteLibrary',
+      name: 'UseSelectify',
       formats: ['es', 'umd'],
-      fileName: (format) => `react-vite-library.${format}.js`,
+      fileName: (format) => `use-selectify.${format}.js`,
     },
     rollupOptions: {
       external: [...Object.keys(packageJson.peerDependencies)],
