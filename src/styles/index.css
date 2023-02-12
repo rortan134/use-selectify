@@ -1,0 +1,17 @@
+.selectify_selection-box_default-theme {
+    position: absolute;
+    z-index: 50;
+    background-color: rgba(138, 161, 255, 0.25);
+    border-color: rgba(138, 161, 255, 0.75);
+    border-width: 1px;
+    border-style: dashed;
+}
+
+.selectify_selection-box_outline-theme {
+    position: absolute;
+    z-index: 50;
+    opacity: 0.5;
+    border-color: #4362fe;
+    border-width: 1px;
+    border-style: dashed;
+}
