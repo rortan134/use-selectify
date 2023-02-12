@@ -5,7 +5,7 @@ export const isRef = (e: any): e is React.RefObject<any> => {
 };
 
 export default function useEventListener<K extends keyof GlobalEventHandlersEventMap>(
-    node: HTMLElement | Window | null | undefined,
+    node: HTMLElement | Document | Window | null | undefined,
     event: K,
     listener: (event: GlobalEventHandlersEventMap[K]) => void,
     options?: boolean | (AddEventListenerOptions & { useWindow?: boolean })
