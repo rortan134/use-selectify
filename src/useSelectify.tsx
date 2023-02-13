@@ -590,15 +590,17 @@ function useSelectify<T extends HTMLElement>(
         [activateOnMetaKey, disabled, handleDrawRect, handleEscapeCancel, ref, triggerOnDragStart]
     );
 
-    const clearSelection = () => {
+    const clearSelection = React.useCallback(() => {
         handleDrawRectEnd();
         window.clearTimeout(selectionTimerRef.current);
 
+        // force unselection events
+        lastIntersectedElements.current = selectedElements;
+        intersectionDifference.current = selectedElements;
         // wipe selections
-        lastIntersectedElements.current = [];
         if (shouldDelaySelect) handleDelayedSelect([]);
         else handleSelect([]);
-    };
+    }, [handleDelayedSelect, handleDrawRectEnd, handleSelect, selectedElements, shouldDelaySelect]);
 
     useEventListener(ref.current || document, "pointerdown", handleDrawRectStart, true);
     // add listeners to document for better UX
@@ -631,7 +633,7 @@ function useSelectify<T extends HTMLElement>(
         isDragging,
         hasSelected,
         selectionBox,
-        clearSelections: clearSelection,
+        clearSelection,
     };
 }
 
