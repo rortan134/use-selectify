@@ -215,7 +215,7 @@ function useSelectify<T extends HTMLElement>(
     const intersectBoxRef = React.useRef<HTMLDivElement>(null);
     const selectionTimerRef = React.useRef(0);
     const scrollTimerRef = React.useRef(0);
-    const intersectionDifference = React.useRef<Element>();
+    const intersectionDifference = React.useRef<Element[]>([]);
     const hasSelected = selectedElements.length > 0;
     const shouldDelaySelect = selectionDelay && selectionDelay > 0;
 
@@ -235,10 +235,15 @@ function useSelectify<T extends HTMLElement>(
             }
             setSelectedElements(elementsToSelect);
             if (!lastElements || !difference) return;
+
             if (elementsToSelect.length > lastElements.length) {
-                triggerSelectEvent(difference);
+                difference.forEach((element) => {
+                    triggerSelectEvent(element);
+                });
             } else if (elementsToSelect.length < lastElements.length) {
-                triggerUnselectEvent(difference);
+                difference.forEach((element) => {
+                    triggerUnselectEvent(element);
+                });
             }
         },
         [disableUnselection, triggerSelectEvent, triggerUnselectEvent]
@@ -254,10 +259,15 @@ function useSelectify<T extends HTMLElement>(
                 }
                 setSelectedElements(elementsToSelect);
                 if (!lastElements || !difference) return;
+
                 if (elementsToSelect.length > lastElements.length) {
-                    triggerSelectEvent(difference);
+                    difference.forEach((element) => {
+                        triggerSelectEvent(element);
+                    });
                 } else if (elementsToSelect.length < lastElements.length) {
-                    triggerUnselectEvent(difference);
+                    difference.forEach((element) => {
+                        triggerUnselectEvent(element);
+                    });
                 }
             }, selectionDelay);
         },
@@ -468,6 +478,8 @@ function useSelectify<T extends HTMLElement>(
 
             setEndPoint({ x: event.pageX, y: event.pageY });
 
+            if (!canSelectRef.current) return;
+
             // Initiate element selection process
             const matchingElements = findMatchingElements({
                 scope: ref.current,
@@ -489,10 +501,10 @@ function useSelectify<T extends HTMLElement>(
                 .filter((x) => !lastIntersectedElements.current.includes(x))
                 .concat(
                     lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
-                )[0];
+                );
 
             // Check if there's something to be selected
-            if (difference && canSelectRef.current) {
+            if (difference.length > 0) {
                 intersectionDifference.current = difference;
                 if (!onlySelectOnDragEnd) {
                     if (shouldDelaySelect) handleDelayedSelect(intersectedElements);
@@ -595,7 +607,6 @@ function useSelectify<T extends HTMLElement>(
 
     const SelectBoxOutlet = (props?: React.ComponentPropsWithoutRef<"div">) => {
         if (disabled) {
-            console.log("returned");
             return null;
         }
 
