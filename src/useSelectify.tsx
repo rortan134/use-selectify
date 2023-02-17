@@ -618,10 +618,10 @@ function useSelectify<T extends HTMLElement>(
                 ref={intersectBoxRef}
                 selectionBox={selectionBox}
                 isDragging={isDragging}
-                forceMount={Boolean(forceMount)}
                 overlappedElementsCount={selectedElements.length + 1}
                 theme={theme}
                 label={label}
+                forceMount={Boolean(forceMount)}
             />
         );
     };

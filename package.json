@@ -1,6 +1,6 @@
 {
   "name": "use-seletify",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -89,9 +89,8 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
-      "yarn eslint",
+      "yarn lint:fix",
       "yarn format"
     ]
-  },
-  "dependencies": {}
+  }
 }
