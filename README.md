@@ -1,4 +1,4 @@
-[useSelectify](/.github/assets/use-selectify-banner.png)
+[useSelectify](https://raw.githubusercontent.com/rortan134/use-selectify/master/.github/assets/use-selectify-banner.png)
 
 <h1 align="center">use-selectify</h1>
 
@@ -245,7 +245,7 @@ Drawing your own selection box
 </summary>
 
 <!-- Styled Components, Stitches, etc. -->
-
+    
 Work in progress...
 
 </details>
