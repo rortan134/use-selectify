@@ -45,7 +45,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
         const {
             style,
             label,
-            theme,
+            theme = "default",
             selectionBox,
             isDragging,
             overlappedElementsCount,
@@ -54,7 +54,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
         } = props;
 
         const wasDragActive = React.useRef(false);
-        const selectionBoxTheme = `selectify_selection-box_${theme ?? "default"}-theme`;
+        const selectionBoxTheme = `selectify_selection-box_${theme}-theme`;
 
         const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
         const [liveText, setLiveText] = React.useState("");
@@ -80,10 +80,11 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
             <div
                 {...selectBoxProps}
                 ref={forwardedRef}
+                id="selectify-selection-box-wrapper"
                 role="region"
                 aria-labelledby="selectify-selection-box"
                 className={selectionBoxTheme}
-                style={{ ...selectionBox, ...style }}
+                style={{ position: "absolute", zIndex: "9999", ...selectionBox, ...style }}
             >
                 <span
                     id="selectify-selection-box"
@@ -131,6 +132,11 @@ export interface UseSelectProps {
      */
     autoScrollEdgeDistance?: number;
     /**
+     * Auto scroll speed.
+     * @defaultValue 40
+     */
+    autoScrollStep: number;
+    /**
      * Will keep every item selected after selection.
      * Can be cleared with clearSelection()
      */
@@ -165,12 +171,16 @@ export interface UseSelectProps {
      * Distance in px from which elements can be selected even if selection box is not visually intersecting
      * @defaultValue 0
      */
-    // selectionTolerance?: number;
+    selectionTolerance?: number;
     /**
      * Only enables the selection box if the user was pressing a meta key while initiating the drag.
      * Included meta keys are: Shift, Ctrl, Cmd and Alt.
      */
     activateOnMetaKey?: boolean;
+    /**
+     * Only enables the selection box if the user was pressing a specified key while initiating the drag.
+     */
+    activateOnKey?: string[];
     theme?: Theme | undefined;
     disabled?: boolean;
     forceMount?: boolean;
@@ -190,14 +200,16 @@ function useSelectify<T extends HTMLElement>(
         maxSelections = false,
         autoScroll = true,
         autoScrollEdgeDistance = 100,
+        autoScrollStep = 40,
         disableUnselection,
         activateOnMetaKey,
+        activateOnKey,
         onlySelectOnFullOverlap,
         onlySelectOnDragEnd,
         selectionDelay,
         label,
         theme,
-        // selectionTolerance,
+        selectionTolerance = 0,
         onSelect = () => {},
         onUnselect = () => {},
         onDragStart = () => {},
@@ -225,9 +237,8 @@ function useSelectify<T extends HTMLElement>(
     const triggerOnDragEnd = useCallbackRef(onDragEnd);
     const triggerOnEscapeKeyDown = useCallbackRef(onEscapeKeyDown);
 
-    const handleSelect = React.useCallback(
+    const select = React.useCallback(
         (elementsToSelect: Element[]) => {
-            window.clearTimeout(selectionTimerRef.current);
             const lastElements = lastIntersectedElements.current;
             const difference = intersectionDifference.current;
             if (disableUnselection && elementsToSelect.length < lastElements.length) {
@@ -254,34 +265,21 @@ function useSelectify<T extends HTMLElement>(
         [disableUnselection, triggerSelectEvent, triggerUnselectEvent]
     );
 
+    const handleSelect = React.useCallback(
+        (elementsToSelect: Element[]) => {
+            window.clearTimeout(selectionTimerRef.current);
+            select(elementsToSelect);
+        },
+        [select]
+    );
+
     const handleDelayedSelect = React.useCallback(
         (elementsToSelect: Element[]) => {
             selectionTimerRef.current = window.setTimeout(() => {
-                const lastElements = lastIntersectedElements.current;
-                const difference = intersectionDifference.current;
-                if (disableUnselection && elementsToSelect.length < lastElements.length) {
-                    return;
-                }
-
-                setSelectedElements(elementsToSelect);
-                if (!lastElements || !difference) return;
-                const hasSelected = elementsToSelect.length > lastElements.length;
-                const hasUnselected = elementsToSelect.length < lastElements.length;
-
-                if (hasSelected) {
-                    difference.forEach((element) => {
-                        triggerSelectEvent(element);
-                    });
-                } else if (hasUnselected) {
-                    difference.forEach((element) => {
-                        triggerUnselectEvent(element);
-                    });
-                }
-
-                lastIntersectedElements.current = elementsToSelect;
+                select(elementsToSelect);
             }, selectionDelay);
         },
-        [disableUnselection, selectionDelay, triggerSelectEvent, triggerUnselectEvent]
+        [select, selectionDelay]
     );
 
     const findMatchingElements = React.useCallback(
@@ -297,7 +295,9 @@ function useSelectify<T extends HTMLElement>(
                 // fallback to already selected elements
                 return selectedElements;
             }
-            return scope.querySelectorAll(matchCriteria);
+            return Array.prototype.slice
+                .call(scope.querySelectorAll(matchCriteria))
+                .filter((el) => el.id !== "selectify-selection-box-wrapper") as Element[];
         },
         [maxSelections, selectedElements]
     );
@@ -306,33 +306,29 @@ function useSelectify<T extends HTMLElement>(
         (boxA: BoxBoundingPosition, boxB: BoxBoundingPosition) => {
             if (
                 onlySelectOnFullOverlap &&
-                boxA.left <= boxB.left &&
-                boxA.left + boxA.width >= boxB.left + boxB.width &&
-                boxA.top <= boxB.top &&
-                boxA.top + boxA.height >= boxB.top + boxB.height
+                boxA.left - selectionTolerance <= boxB.left &&
+                boxA.left + boxA.width + selectionTolerance >= boxB.left + boxB.width &&
+                boxA.top - selectionTolerance <= boxB.top &&
+                boxA.top + boxA.height + selectionTolerance >= boxB.top + boxB.height
             ) {
                 return true;
             } else if (
                 !onlySelectOnFullOverlap &&
-                boxA.left <= boxB.left + boxB.width &&
-                boxA.left + boxA.width >= boxB.left &&
-                boxA.top <= boxB.top + boxB.height &&
-                boxA.top + boxA.height >= boxB.top
+                boxA.left - selectionTolerance <= boxB.left + boxB.width &&
+                boxA.left + boxA.width + selectionTolerance >= boxB.left &&
+                boxA.top - selectionTolerance <= boxB.top + boxB.height &&
+                boxA.top + boxA.height + selectionTolerance >= boxB.top
             ) {
                 return true;
             }
             return false;
         },
-        [onlySelectOnFullOverlap]
+        [onlySelectOnFullOverlap, selectionTolerance]
     );
 
     const getIntersectedElements = React.useCallback(
-        (
-            intersectionBox: Element,
-            elementsToIntersect: readonly Element[] | NodeListOf<Element>
-        ) => {
-            // convert NodeList to Element[]
-            return Array.prototype.slice.call(elementsToIntersect).flatMap(
+        (intersectionBox: Element, elementsToIntersect: readonly Element[]) => {
+            return elementsToIntersect.flatMap(
                 (item) =>
                     checkIntersection(
                         intersectionBox.getBoundingClientRect(),
@@ -340,7 +336,7 @@ function useSelectify<T extends HTMLElement>(
                     )
                         ? item
                         : [] // placeholder array, will be removed after .flatMap
-            ) as Element[];
+            );
         },
         [checkIntersection]
     );
@@ -398,7 +394,7 @@ function useSelectify<T extends HTMLElement>(
                 const canScrollRight = currentScrollX < maxScrollX;
                 let nextScrollX = currentScrollX;
                 let nextScrollY = currentScrollY;
-                const maxStep = 50;
+                const maxStep = autoScrollStep;
 
                 if (isInLeftEdge && canScrollLeft) {
                     const intensity = (edgeLeft - viewportX) / autoScrollEdgeDistance;
@@ -435,7 +431,7 @@ function useSelectify<T extends HTMLElement>(
                 }
             })();
         },
-        [autoScrollEdgeDistance]
+        [autoScrollEdgeDistance, autoScrollStep]
     );
 
     /* --------------------------------------------------------------------------- */
@@ -548,13 +544,13 @@ function useSelectify<T extends HTMLElement>(
         setIsDragging(false);
     }, [handleDrawRect, ref]);
 
-    const handleEscapeCancel = React.useCallback(
+    const handleEscapeKeyCancel = React.useCallback(
         (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 cancelRectDraw();
                 triggerOnEscapeKeyDown(event);
             }
-            document.removeEventListener("keydown", handleEscapeCancel);
+            document.removeEventListener("keydown", handleEscapeKeyCancel);
         },
         [cancelRectDraw, triggerOnEscapeKeyDown]
     );
@@ -565,7 +561,7 @@ function useSelectify<T extends HTMLElement>(
         cancelRectDraw();
         document.removeEventListener("pointerup", handleDrawRectEnd);
         document.removeEventListener("pointerleave", handleDrawRectEnd);
-        document.removeEventListener("keydown", handleEscapeCancel);
+        document.removeEventListener("keydown", handleEscapeKeyCancel);
 
         if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
             if (shouldDelaySelect) handleDelayedSelect(lastIntersectedElements.current);
@@ -575,7 +571,7 @@ function useSelectify<T extends HTMLElement>(
         cancelRectDraw,
         disabled,
         handleDelayedSelect,
-        handleEscapeCancel,
+        handleEscapeKeyCancel,
         handleSelect,
         onlySelectOnDragEnd,
         ref,
@@ -596,23 +592,27 @@ function useSelectify<T extends HTMLElement>(
                 triggerOnDragStart(event);
 
                 parentNode.addEventListener("pointermove", handleDrawRect);
-                document.addEventListener("keydown", handleEscapeCancel);
+                document.addEventListener("keydown", handleEscapeKeyCancel);
             }
         },
-        [activateOnMetaKey, disabled, handleDrawRect, handleEscapeCancel, ref, triggerOnDragStart]
+        [
+            activateOnMetaKey,
+            disabled,
+            handleDrawRect,
+            handleEscapeKeyCancel,
+            ref,
+            triggerOnDragStart,
+        ]
     );
 
     const selectAll = React.useCallback(() => {
         handleDrawRectEnd();
         window.clearTimeout(selectionTimerRef.current);
 
-        const allElements: Element[] = Array.prototype.slice.call(
-            findMatchingElements({
-                scope: ref.current,
-                matchCriteria: selectCriteria,
-            })
-        );
-
+        const allElements = findMatchingElements({
+            scope: ref.current,
+            matchCriteria: selectCriteria,
+        });
         if (!allElements) return;
 
         // force selection events
@@ -672,6 +672,7 @@ function useSelectify<T extends HTMLElement>(
         selectionBox,
         selectAll,
         clearSelection,
+        options,
     };
 }
 
