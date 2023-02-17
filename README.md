@@ -1,4 +1,4 @@
-[useSelectify](https://raw.githubusercontent.com/rortan134/use-selectify/master/.github/assets/use-selectify-banner.png)
+![useSelectify](https://raw.githubusercontent.com/rortan134/use-selectify/master/.github/assets/use-selectify-banner.png)
 
 <h1 align="center">use-selectify</h1>
 
@@ -63,6 +63,8 @@ $ yarn add use-selectify
 ```
 
 ## Getting Started
+
+Begin by defining the element that will contain the drag interaction, then render the selection box outlet in it.
 
 ```tsx
 import * as React from "react";
@@ -150,7 +152,7 @@ TailwindCSS and [cva](https://github.com/joe-bell/cva) is a powerful combination
 ```tsx
 <div ref={selectionContainerRef} style={{ position: "relative" }}>
     // ...
-    <SelectBoxOutlet className="foo-bar" />
+    <SelectBoxOutlet />
 </div>
 ```
 
@@ -245,7 +247,7 @@ Drawing your own selection box
 </summary>
 
 <!-- Styled Components, Stitches, etc. -->
-    
+
 Work in progress...
 
 </details>
