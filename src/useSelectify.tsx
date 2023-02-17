@@ -233,18 +233,23 @@ function useSelectify<T extends HTMLElement>(
             if (disableUnselection && elementsToSelect.length < lastElements.length) {
                 return;
             }
+
             setSelectedElements(elementsToSelect);
             if (!lastElements || !difference) return;
+            const hasSelected = elementsToSelect.length > lastElements.length;
+            const hasUnselected = elementsToSelect.length < lastElements.length;
 
-            if (elementsToSelect.length > lastElements.length) {
+            if (hasSelected) {
                 difference.forEach((element) => {
                     triggerSelectEvent(element);
                 });
-            } else if (elementsToSelect.length < lastElements.length) {
+            } else if (hasUnselected) {
                 difference.forEach((element) => {
                     triggerUnselectEvent(element);
                 });
             }
+
+            lastIntersectedElements.current = elementsToSelect;
         },
         [disableUnselection, triggerSelectEvent, triggerUnselectEvent]
     );
@@ -257,18 +262,23 @@ function useSelectify<T extends HTMLElement>(
                 if (disableUnselection && elementsToSelect.length < lastElements.length) {
                     return;
                 }
+
                 setSelectedElements(elementsToSelect);
                 if (!lastElements || !difference) return;
+                const hasSelected = elementsToSelect.length > lastElements.length;
+                const hasUnselected = elementsToSelect.length < lastElements.length;
 
-                if (elementsToSelect.length > lastElements.length) {
+                if (hasSelected) {
                     difference.forEach((element) => {
                         triggerSelectEvent(element);
                     });
-                } else if (elementsToSelect.length < lastElements.length) {
+                } else if (hasUnselected) {
                     difference.forEach((element) => {
                         triggerUnselectEvent(element);
                     });
                 }
+
+                lastIntersectedElements.current = elementsToSelect;
             }, selectionDelay);
         },
         [disableUnselection, selectionDelay, triggerSelectEvent, triggerUnselectEvent]
@@ -283,13 +293,13 @@ function useSelectify<T extends HTMLElement>(
             matchCriteria: string;
         }) => {
             if (!scope) return;
-            // if (maxSelections && selectedElements.length >= maxSelections) {
-            //     // fallback to already selected elements
-            //     return selectedElements;
-            // }
+            if (maxSelections && selectedElements.length >= maxSelections) {
+                // fallback to already selected elements
+                return selectedElements;
+            }
             return scope.querySelectorAll(matchCriteria);
         },
-        []
+        [maxSelections, selectedElements]
     );
 
     const checkIntersection = React.useCallback(
@@ -317,7 +327,11 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getIntersectedElements = React.useCallback(
-        (intersectionBox: Element, elementsToIntersect: Element[] | NodeListOf<Element>) => {
+        (
+            intersectionBox: Element,
+            elementsToIntersect: readonly Element[] | NodeListOf<Element>
+        ) => {
+            // convert NodeList to Element[]
             return Array.prototype.slice.call(elementsToIntersect).flatMap(
                 (item) =>
                     checkIntersection(
@@ -326,20 +340,14 @@ function useSelectify<T extends HTMLElement>(
                     )
                         ? item
                         : [] // placeholder array, will be removed after .flatMap
-            );
+            ) as Element[];
         },
         [checkIntersection]
     );
 
-    React.useEffect(() => {
-        // cleanup
-        return () => {
-            window.clearTimeout(selectionTimerRef.current);
-        };
-    }, []);
-
     /* --------------------------------------------------------------------------- */
 
+    // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
         (event: PointerEvent) => {
             const viewportX = event.clientX;
@@ -489,14 +497,10 @@ function useSelectify<T extends HTMLElement>(
                 return;
             }
 
-            const intersectedElements: Element[] = getIntersectedElements(
-                selectionBoxRef,
-                matchingElements
-            );
+            const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
 
             // Get symetric difference between last intersected elements
             // and latest intersected elements.
-            // ToDo: Currently only selects one element at a time ([0]). Will be fixed soon
             const difference = intersectedElements
                 .filter((x) => !lastIntersectedElements.current.includes(x))
                 .concat(
@@ -511,8 +515,6 @@ function useSelectify<T extends HTMLElement>(
                     else handleSelect(intersectedElements);
                 }
             }
-
-            lastIntersectedElements.current = intersectedElements;
 
             if (autoScroll) {
                 handleAutomaticWindowScroll(event);
@@ -565,10 +567,20 @@ function useSelectify<T extends HTMLElement>(
         document.removeEventListener("pointerleave", handleDrawRectEnd);
         document.removeEventListener("keydown", handleEscapeCancel);
 
-        if (onlySelectOnDragEnd) {
-            handleSelect(lastIntersectedElements.current);
+        if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
+            if (shouldDelaySelect) handleDelayedSelect(lastIntersectedElements.current);
+            else handleSelect(lastIntersectedElements.current);
         }
-    }, [cancelRectDraw, disabled, handleEscapeCancel, handleSelect, onlySelectOnDragEnd, ref]);
+    }, [
+        cancelRectDraw,
+        disabled,
+        handleDelayedSelect,
+        handleEscapeCancel,
+        handleSelect,
+        onlySelectOnDragEnd,
+        ref,
+        shouldDelaySelect,
+    ]);
 
     const handleDrawRectStart = React.useCallback(
         (event: PointerEvent) => {
@@ -590,6 +602,25 @@ function useSelectify<T extends HTMLElement>(
         [activateOnMetaKey, disabled, handleDrawRect, handleEscapeCancel, ref, triggerOnDragStart]
     );
 
+    const selectAll = React.useCallback(() => {
+        handleDrawRectEnd();
+        window.clearTimeout(selectionTimerRef.current);
+
+        const allElements: Element[] = Array.prototype.slice.call(
+            findMatchingElements({
+                scope: ref.current,
+                matchCriteria: selectCriteria,
+            })
+        );
+
+        if (!allElements) return;
+
+        // force selection events
+        intersectionDifference.current = allElements;
+
+        handleSelect(allElements);
+    }, [findMatchingElements, handleDrawRectEnd, handleSelect, ref, selectCriteria]);
+
     const clearSelection = React.useCallback(() => {
         handleDrawRectEnd();
         window.clearTimeout(selectionTimerRef.current);
@@ -598,16 +629,22 @@ function useSelectify<T extends HTMLElement>(
         lastIntersectedElements.current = selectedElements;
         intersectionDifference.current = selectedElements;
         // wipe selections
-        if (shouldDelaySelect) handleDelayedSelect([]);
-        else handleSelect([]);
-    }, [handleDelayedSelect, handleDrawRectEnd, handleSelect, selectedElements, shouldDelaySelect]);
+        handleSelect([]);
+    }, [handleDrawRectEnd, handleSelect, selectedElements]);
+
+    React.useEffect(() => {
+        // cleanup
+        return () => {
+            window.clearTimeout(selectionTimerRef.current);
+        };
+    }, []);
 
     useEventListener(ref.current || document, "pointerdown", handleDrawRectStart, true);
     // add listeners to document for better UX
     useEventListener(document, "pointerup", handleDrawRectEnd, false);
     useEventListener(document, "pointerleave", handleDrawRectEnd, false);
 
-    const SelectBoxOutlet = (props?: React.ComponentPropsWithoutRef<"div">) => {
+    const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (disabled) {
             return null;
         }
@@ -624,7 +661,7 @@ function useSelectify<T extends HTMLElement>(
                 label={label}
             />
         );
-    };
+    });
     SelectBoxOutlet.displayName = SELECT_BOX_NAME;
 
     return {
@@ -633,6 +670,7 @@ function useSelectify<T extends HTMLElement>(
         isDragging,
         hasSelected,
         selectionBox,
+        selectAll,
         clearSelection,
     };
 }

@@ -1,12 +1,21 @@
 {
-  "name": "use-seletify",
-  "version": "0.0.1",
+  "name": "use-selectify",
+  "version": "0.3.0",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/rortan134/use-selectify"
   },
-  "keywords": [],
+  "keywords": [
+    "selection",
+    "drag selection",
+    "selection box",
+    "drag to select",
+    "mouse",
+    "touch",
+    "react",
+    "react hook"
+  ],
   "author": "rortan",
   "bugs": {
     "url": "https://github.com/rortan134/use-selectify/issues"
@@ -43,7 +52,7 @@
     "@storybook/addon-essentials": "^6.5.16",
     "@storybook/addon-interactions": "^6.5.16",
     "@storybook/addon-links": "^6.5.16",
-    "@storybook/builder-vite": "^0.4.0",
+    "@storybook/builder-vite": "^0.4.2",
     "@storybook/react": "^6.5.16",
     "@storybook/testing-library": "^0.0.13",
     "@types/node": "^18.7.6",
