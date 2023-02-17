@@ -246,18 +246,15 @@ function useSelectify<T extends HTMLElement>(
             }
 
             setSelectedElements(elementsToSelect);
+
             if (!lastElements || !difference) return;
             const hasSelected = elementsToSelect.length > lastElements.length;
             const hasUnselected = elementsToSelect.length < lastElements.length;
 
             if (hasSelected) {
-                difference.forEach((element) => {
-                    triggerSelectEvent(element);
-                });
+                difference.forEach((element) => triggerSelectEvent(element));
             } else if (hasUnselected) {
-                difference.forEach((element) => {
-                    triggerUnselectEvent(element);
-                });
+                difference.forEach((element) => triggerUnselectEvent(element));
             }
 
             lastIntersectedElements.current = elementsToSelect;
@@ -304,24 +301,26 @@ function useSelectify<T extends HTMLElement>(
 
     const checkIntersection = React.useCallback(
         (boxA: BoxBoundingPosition, boxB: BoxBoundingPosition) => {
-            if (
-                onlySelectOnFullOverlap &&
-                boxA.left - selectionTolerance <= boxB.left &&
-                boxA.left + boxA.width + selectionTolerance >= boxB.left + boxB.width &&
-                boxA.top - selectionTolerance <= boxB.top &&
-                boxA.top + boxA.height + selectionTolerance >= boxB.top + boxB.height
-            ) {
-                return true;
-            } else if (
-                !onlySelectOnFullOverlap &&
-                boxA.left - selectionTolerance <= boxB.left + boxB.width &&
-                boxA.left + boxA.width + selectionTolerance >= boxB.left &&
-                boxA.top - selectionTolerance <= boxB.top + boxB.height &&
-                boxA.top + boxA.height + selectionTolerance >= boxB.top
-            ) {
-                return true;
+            const { left: aLeft, top: aTop, width: aWidth, height: aHeight } = boxA;
+            const { left: bLeft, top: bTop, width: bWidth, height: bHeight } = boxB;
+
+            if (onlySelectOnFullOverlap) {
+                const isFullOverlap =
+                    aLeft - selectionTolerance <= bLeft &&
+                    aLeft + aWidth + selectionTolerance >= bLeft + bWidth &&
+                    aTop - selectionTolerance <= bTop &&
+                    aTop + aHeight + selectionTolerance >= bTop + bHeight;
+
+                return isFullOverlap;
             }
-            return false;
+
+            const isPartialOverlap =
+                aLeft - selectionTolerance <= bLeft + bWidth + selectionTolerance &&
+                aLeft + aWidth + selectionTolerance >= bLeft &&
+                aTop - selectionTolerance <= bTop + bHeight + selectionTolerance &&
+                aTop + aHeight + selectionTolerance >= bTop;
+
+            return isPartialOverlap;
         },
         [onlySelectOnFullOverlap, selectionTolerance]
     );
