@@ -34,13 +34,13 @@ Created out of need, `use-selectify` is a robust React element selection library
 
 ## Features
 
-✅ Automatic AutoScroll
+✅ Automatic Window Scrolling
 
 ✅ Lightweight and Flexible
 
 ✅ Accessible by Default
 
-✅ Fine-Grained Control: 100% Customizable
+✅ Fine-Grained Control
 
 ✅ Simple to Style
 
