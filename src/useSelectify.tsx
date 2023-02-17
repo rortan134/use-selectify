@@ -187,6 +187,7 @@ export interface UseSelectProps {
     onSelect?(element: Element): void;
     onUnselect?(unselectedElement: Element): void;
     onDragStart?(e: PointerEvent): void;
+    onDragMove?(e: PointerEvent, selectedElements: Element[]): void;
     onDragEnd?(e: PointerEvent, selectedElements: Element[]): void;
     onEscapeKeyDown?(e: KeyboardEvent): void;
 }
@@ -213,6 +214,7 @@ function useSelectify<T extends HTMLElement>(
         onSelect = () => {},
         onUnselect = () => {},
         onDragStart = () => {},
+        onDragMove = () => {},
         onDragEnd = () => {},
         onEscapeKeyDown = () => {},
         disabled,
@@ -234,6 +236,7 @@ function useSelectify<T extends HTMLElement>(
     const triggerSelectEvent = useCallbackRef(onSelect);
     const triggerUnselectEvent = useCallbackRef(onUnselect);
     const triggerOnDragStart = useCallbackRef(onDragStart);
+    const triggerOnDragMove = useCallbackRef(onDragMove);
     const triggerOnDragEnd = useCallbackRef(onDragEnd);
     const triggerOnEscapeKeyDown = useCallbackRef(onEscapeKeyDown);
 
@@ -470,6 +473,15 @@ function useSelectify<T extends HTMLElement>(
         [calculateSelectionBox, endPoint, startPoint]
     );
 
+    const matchingElements = React.useMemo(
+        () =>
+            findMatchingElements({
+                scope: ref.current,
+                matchCriteria: selectCriteria,
+            }),
+        [findMatchingElements, ref, selectCriteria, isDragging]
+    );
+
     const handleDrawRect = React.useCallback(
         (event: PointerEvent) => {
             event.preventDefault();
@@ -481,14 +493,8 @@ function useSelectify<T extends HTMLElement>(
 
             setEndPoint({ x: event.pageX, y: event.pageY });
 
-            if (!canSelectRef.current) return;
-
             // Initiate element selection process
-            const matchingElements = findMatchingElements({
-                scope: ref.current,
-                matchCriteria: selectCriteria,
-            });
-            if (!matchingElements || matchingElements.length === 0) {
+            if (!canSelectRef.current || !matchingElements || matchingElements.length === 0) {
                 return;
             }
 
@@ -515,20 +521,19 @@ function useSelectify<T extends HTMLElement>(
                 handleAutomaticWindowScroll(event);
             }
 
-            triggerOnDragEnd(event, intersectedElements);
+            triggerOnDragMove(event, intersectedElements);
         },
         [
             autoScroll,
-            findMatchingElements,
             getIntersectedElements,
             handleAutomaticWindowScroll,
             handleDelayedSelect,
             handleSelect,
+            matchingElements,
             onlySelectOnDragEnd,
             ref,
-            selectCriteria,
             shouldDelaySelect,
-            triggerOnDragEnd,
+            triggerOnDragMove,
         ]
     );
 
@@ -554,28 +559,49 @@ function useSelectify<T extends HTMLElement>(
         [cancelRectDraw, triggerOnEscapeKeyDown]
     );
 
-    const handleDrawRectEnd = React.useCallback(() => {
-        const parentNode = ref.current;
-        if (disabled || !parentNode) return;
-        cancelRectDraw();
-        document.removeEventListener("pointerup", handleDrawRectEnd);
-        document.removeEventListener("pointerleave", handleDrawRectEnd);
-        document.removeEventListener("keydown", handleEscapeKeyCancel);
+    const handleDrawRectEnd = React.useCallback(
+        (event?: PointerEvent) => {
+            const parentNode = ref.current;
+            if (disabled || !parentNode) return;
 
-        if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
-            if (shouldDelaySelect) handleDelayedSelect(lastIntersectedElements.current);
-            else handleSelect(lastIntersectedElements.current);
-        }
-    }, [
-        cancelRectDraw,
-        disabled,
-        handleDelayedSelect,
-        handleEscapeKeyCancel,
-        handleSelect,
-        onlySelectOnDragEnd,
-        ref,
-        shouldDelaySelect,
-    ]);
+            if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
+                const selectionBoxRef = intersectBoxRef.current;
+
+                if (!selectionBoxRef || !matchingElements || matchingElements.length === 0) {
+                    return;
+                }
+
+                const intersectedElements = getIntersectedElements(
+                    selectionBoxRef,
+                    matchingElements
+                );
+
+                if (shouldDelaySelect) handleDelayedSelect(intersectedElements);
+                else handleSelect(intersectedElements);
+            }
+
+            cancelRectDraw();
+            document.removeEventListener("pointerup", handleDrawRectEnd);
+            document.removeEventListener("pointerleave", handleDrawRectEnd);
+            document.removeEventListener("keydown", handleEscapeKeyCancel);
+
+            if (event) triggerOnDragEnd(event, selectedElements);
+        },
+        [
+            cancelRectDraw,
+            disabled,
+            getIntersectedElements,
+            handleDelayedSelect,
+            handleEscapeKeyCancel,
+            handleSelect,
+            matchingElements,
+            onlySelectOnDragEnd,
+            ref,
+            selectedElements,
+            shouldDelaySelect,
+            triggerOnDragEnd,
+        ]
+    );
 
     const handleDrawRectStart = React.useCallback(
         (event: PointerEvent) => {
