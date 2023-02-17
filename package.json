@@ -34,8 +34,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
-    "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
+    "lint:fix": "eslint --fix src/**/*.{jsx,ts,tsx}",
     "format": "prettier --write src//**/*.{ts,tsx,css} --config ./.prettierrc",
     "clean": "rm -rf dist",
     "prepare": "husky install",
@@ -98,9 +98,8 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
-      "yarn eslint",
+      "yarn lint:fix",
       "yarn format"
     ]
-  },
-  "dependencies": {}
+  }
 }
