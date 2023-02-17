@@ -657,6 +657,8 @@ function useSelectify<T extends HTMLElement>(
         handleSelect([]);
     }, [handleDrawRectEnd, handleSelect, selectedElements]);
 
+    // const invertSelection = React.useCallback(() => {}, []);
+
     React.useEffect(() => {
         // cleanup
         return () => {
@@ -697,6 +699,7 @@ function useSelectify<T extends HTMLElement>(
         selectionBox,
         selectAll,
         clearSelection,
+        setSelectedElements,
         options,
     };
 }
