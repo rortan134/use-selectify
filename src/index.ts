@@ -1,1 +1,3 @@
-export { SelectBox, useSelectify } from "./useSelectify";
+import { useSelectify } from "./useSelectify";
+export * from "./useSelectify";
+export default useSelectify;
