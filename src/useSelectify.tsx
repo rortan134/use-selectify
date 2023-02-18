@@ -267,7 +267,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleSelect = React.useCallback(
         (elementsToSelect: Element[]) => {
-            window.clearTimeout(selectionTimerRef.current);
+            window?.clearTimeout(selectionTimerRef.current);
             select(elementsToSelect);
         },
         [select]
@@ -275,7 +275,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleDelayedSelect = React.useCallback(
         (elementsToSelect: Element[]) => {
-            selectionTimerRef.current = window.setTimeout(() => {
+            selectionTimerRef.current = window?.setTimeout(() => {
                 select(elementsToSelect);
             }, selectionDelay);
         },
@@ -364,7 +364,7 @@ function useSelectify<T extends HTMLElement>(
 
             // stop if the mouse is not in the viewport edge
             if (!(isInLeftEdge || isInRightEdge || isInTopEdge || isInBottomEdge)) {
-                window.clearTimeout(scrollTimerRef.current);
+                window?.clearTimeout(scrollTimerRef.current);
                 return;
             }
 
@@ -388,8 +388,8 @@ function useSelectify<T extends HTMLElement>(
             const maxScrollY = documentHeight - viewportHeight;
 
             const adjustWindowScroll = () => {
-                const currentScrollX = window.pageXOffset;
-                const currentScrollY = window.pageYOffset;
+                const currentScrollX = window?.pageXOffset;
+                const currentScrollY = window?.pageYOffset;
                 const canScrollUp = currentScrollY > 0;
                 const canScrollDown = currentScrollY < maxScrollY;
                 const canScrollLeft = currentScrollX > 0;
@@ -418,7 +418,7 @@ function useSelectify<T extends HTMLElement>(
                 nextScrollY = Math.max(0, Math.min(maxScrollY, nextScrollY));
 
                 if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
-                    window.scrollTo(nextScrollX, nextScrollY);
+                    window?.scrollTo(nextScrollX, nextScrollY);
                     return true;
                 } else {
                     return false;
@@ -429,7 +429,7 @@ function useSelectify<T extends HTMLElement>(
                 clearTimeout(scrollTimerRef.current);
 
                 if (adjustWindowScroll()) {
-                    scrollTimerRef.current = window.setTimeout(checkForWindowScroll, 30);
+                    scrollTimerRef.current = window?.setTimeout(checkForWindowScroll, 30);
                 }
             })();
         },
@@ -479,6 +479,8 @@ function useSelectify<T extends HTMLElement>(
                 scope: ref.current,
                 matchCriteria: selectCriteria,
             }),
+        // force memo cache invalidation
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [findMatchingElements, ref, selectCriteria, isDragging]
     );
 
@@ -566,7 +568,6 @@ function useSelectify<T extends HTMLElement>(
 
             if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
                 const selectionBoxRef = intersectBoxRef.current;
-
                 if (!selectionBoxRef || !matchingElements || matchingElements.length === 0) {
                     return;
                 }
@@ -607,11 +608,16 @@ function useSelectify<T extends HTMLElement>(
         (event: PointerEvent) => {
             const parentNode = ref.current;
             if (disabled || !parentNode) return;
+
             const shouldActivate = event.button === 0 || event.button === 1;
             const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
             if (!shouldActivate) return;
 
-            if (!activateOnMetaKey || (activateOnMetaKey && isMetaKey)) {
+            if (
+                !activateOnMetaKey ||
+                (activateOnMetaKey && isMetaKey) ||
+                activateOnKey?.some((key) => event.getModifierState(key))
+            ) {
                 setStartPoint({ x: event.pageX, y: event.pageY });
                 setIsDragging(true);
                 triggerOnDragStart(event);
@@ -621,6 +627,7 @@ function useSelectify<T extends HTMLElement>(
             }
         },
         [
+            activateOnKey,
             activateOnMetaKey,
             disabled,
             handleDrawRect,
@@ -631,8 +638,7 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const selectAll = React.useCallback(() => {
-        handleDrawRectEnd();
-        window.clearTimeout(selectionTimerRef.current);
+        window?.clearTimeout(selectionTimerRef.current);
 
         const allElements = findMatchingElements({
             scope: ref.current,
@@ -644,25 +650,24 @@ function useSelectify<T extends HTMLElement>(
         intersectionDifference.current = allElements;
 
         handleSelect(allElements);
-    }, [findMatchingElements, handleDrawRectEnd, handleSelect, ref, selectCriteria]);
+    }, [findMatchingElements, handleSelect, ref, selectCriteria]);
 
     const clearSelection = React.useCallback(() => {
-        handleDrawRectEnd();
-        window.clearTimeout(selectionTimerRef.current);
+        window?.clearTimeout(selectionTimerRef.current);
 
         // force unselection events
         lastIntersectedElements.current = selectedElements;
         intersectionDifference.current = selectedElements;
         // wipe selections
         handleSelect([]);
-    }, [handleDrawRectEnd, handleSelect, selectedElements]);
+    }, [handleSelect, selectedElements]);
 
-    // const invertSelection = React.useCallback(() => {}, []);
+    const invertSelection = React.useCallback(() => {}, []);
 
     React.useEffect(() => {
         // cleanup
         return () => {
-            window.clearTimeout(selectionTimerRef.current);
+            window?.clearTimeout(selectionTimerRef.current);
         };
     }, []);
 
@@ -699,7 +704,8 @@ function useSelectify<T extends HTMLElement>(
         selectionBox,
         selectAll,
         clearSelection,
-        setSelectedElements,
+        cancelSelectionBox: handleDrawRectEnd,
+        invertSelection,
         options,
     };
 }
