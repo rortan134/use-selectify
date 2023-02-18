@@ -36,7 +36,7 @@ Created out of need, `use-selectify` is a robust React element selection library
 
 ✅ Automatic Window Scrolling
 
-✅ Lightweight and Flexible
+✅ Flexible and [Lightweight](https://bundlephobia.com/package/use-selectify) (3kB gzipped)
 
 ✅ Accessible by Default
 
@@ -44,7 +44,7 @@ Created out of need, `use-selectify` is a robust React element selection library
 
 ✅ Simple to Style
 
-✅ Mobile Friendly
+✅ Works on mobile
 
 ✅ SSR Support
 
@@ -52,7 +52,7 @@ Created out of need, `use-selectify` is a robust React element selection library
 
 🚧 Work in progress.
 
-You can check our [Storybook](https://github.com/rortan134/use-selectify/#development) in the meantime.
+You can check our [Storybook](#development) in the meantime.
 
 ## Installation
 
@@ -60,6 +60,34 @@ You can check our [Storybook](https://github.com/rortan134/use-selectify/#develo
 $ npm i use-selectify
 or
 $ yarn add use-selectify
+```
+
+## Anatomy
+
+```tsx
+import { useSelectify } from "use-selectify";
+
+export default () => {
+    const {
+        SelectBoxOutlet,
+        selectedElements,
+        isDragging,
+        hasSelected,
+        selectionBox,
+        selectAll,
+        clearSelection,
+        mutateSelections,
+        cancelSelectionBox,
+        options,
+    } = useSelectify(ref, options);
+};
+```
+
+-   `ref`: A RefObject containing the parent element that will trigger the selection interactions.
+-   `options` (optional): An [object](#options) containing options that can be used to configure the selection behavior.
+
+```tsx
+import { useSelectify } from "use-selectify";
 ```
 
 ## Getting Started
@@ -145,8 +173,6 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 
 By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component.
 
-TailwindCSS and [cva](https://github.com/joe-bell/cva) is a powerful combination for reactive styling.
-
 > For the absolute positioning to work properly on the selection box, the parent element of the outlet should always be relative: `position: relative;`
 
 ```tsx
@@ -157,6 +183,8 @@ TailwindCSS and [cva](https://github.com/joe-bell/cva) is a powerful combination
 ```
 
 Available default themes: `default` | `outline`
+
+> Tip: TailwindCSS and [cva](https://github.com/joe-bell/cva) is a powerful combination for reactive styling.
 
 ## Advanced usage
 
@@ -243,6 +271,15 @@ Work in progress...
 
 <details>
 <summary>
+Declaratively handle selections
+</summary>
+
+Work in progress...
+
+</details>
+
+<details>
+<summary>
 Drawing your own selection box
 </summary>
 
@@ -281,6 +318,7 @@ Work in progress...
 | activateOnMetaKey       | boolean                                                | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
 | activateOnKey           | string[]                                               | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                 | "default"        | Included theme options for the selection box appearance.                                                                                                |
+| hideOnScroll            | boolean                                                | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
 | disabled                | boolean                                                | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                | false            | Forces the mounting of the selection box on initialization.                                                                                             |
 | onSelect                | (element: Element) => void                             | -                | Callback function when an element is selected.                                                                                                          |
