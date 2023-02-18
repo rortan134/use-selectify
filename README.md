@@ -152,7 +152,7 @@ TailwindCSS and [cva](https://github.com/joe-bell/cva) is a powerful combination
 ```tsx
 <div ref={selectionContainerRef} style={{ position: "relative" }}>
     // ...
-    <SelectBoxOutlet />
+    <SelectBoxOutlet className="foo bar" />
 </div>
 ```
 
@@ -190,18 +190,18 @@ const users = [
 ];
 
 const ListItem = ({
-    username,
     selectedElements,
+    children,
 }: {
-    username: string;
     selectedElements: Element[];
+    children: React.ReactNode;
 }) => {
     const itemRef = React.useRef(null);
     const isSelected = selectedElements.includes(itemRef.current);
 
     return (
         <li ref={itemRef} className={isSelected ? "list-item-active" : ""}>
-            {user}
+            {children}
         </li>
     );
 };
@@ -214,7 +214,7 @@ export const List = ({ children }: { children: React.ReactNode }) => {
         <div ref={containerRef} className="container">
             <ul className="list">
                 {users.map((user) => (
-                    <ListItem username={user.name} selectedElements={selectedElements} />
+                    <ListItem selectedElements={selectedElements}>{user.name}</ListItem>
                 ))}
             </ul>
             <SelectBoxOutlet />
@@ -257,6 +257,8 @@ Work in progress...
 Combining drag selection with pan & zoom
 </summary>
 
+<!-- Creating a figma-like canvas. -->
+
 Work in progress...
 
 </details>
@@ -278,7 +280,7 @@ Work in progress...
 | selectionTolerance      | number                                                 | 0                | Distance in px from which elements can be selected even if selection box is not visually intersecting.                                                  |
 | activateOnMetaKey       | boolean                                                | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
 | activateOnKey           | string[]                                               | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
-| theme                   | "default" \| "outline"                                 | "default"        | Included theme options for the selection box appearance.                                                                                                         |
+| theme                   | "default" \| "outline"                                 | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | disabled                | boolean                                                | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                | false            | Forces the mounting of the selection box on initialization.                                                                                             |
 | onSelect                | (element: Element) => void                             | -                | Callback function when an element is selected.                                                                                                          |
