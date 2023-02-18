@@ -86,10 +86,6 @@ export default () => {
 -   `ref`: A RefObject containing the parent element that will trigger the selection interactions.
 -   `options` (optional): An [object](#options) containing options that can be used to configure the selection behavior.
 
-```tsx
-import { useSelectify } from "use-selectify";
-```
-
 ## Getting Started
 
 Begin by defining the element that will contain the drag interaction, then render the selection box outlet in it.
@@ -334,14 +330,14 @@ To ensure that drag interactions are accessible, we must consider the following 
 
 1. Add ARIA attributes: To indicate to assistive technology users that the elements are available for selection, we can use an aria-label to each selectable element. This label should be descriptive and informative, indicating either the purpose of selecting that element or how to select it for screen readers. Additionally, we can use the aria-selected attribute to indicate when elements are selected:
 
-```tsx
-const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
-    onSelect: (el) => {
-        el.setAttribute("aria-selected", "true");
-    },
-});
-// ...
-```
+    ```tsx
+    const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+        onSelect: (el) => {
+            el.setAttribute("aria-selected", "true");
+        },
+    });
+    // ...
+    ```
 
 2. Make elements focusable: To ensure that keyboard-only users can access and select the elements, ensure that every selectable element is also focusable. This means either adding a tabindex attribute to the element and setting it to 0 or using an element that is focusable by default.
 
