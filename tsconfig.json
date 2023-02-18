@@ -20,9 +20,9 @@
         "strictNullChecks": true,
         "baseUrl": ".",
         "paths": {
-            "use-selectify": ["src/component/index.ts"]
+            "use-selectify": ["src/index.ts"]
         },
-        "typeRoots": ["node_modules/@types", "src/component/index.d.ts"]
+        "typeRoots": ["node_modules/@types", "src/index.d.ts"]
     },
     "include": ["src"],
     "references": [{ "path": "./tsconfig.node.json" }]

@@ -17,13 +17,13 @@ export default defineConfig((configEnv) => ({
       linters: [new EsLinter({ configEnv })],
     }),
     dts({
-      include: ['src/component/'],
+      include: ['src/'],
     }),
   ],
   build: {
     lib: {
-      entry: resolve('src', 'component/index.ts'),
-      name: 'UseSelectify',
+      entry: resolve('src', 'index.ts'),
+      name: 'useSelectify',
       formats: ['es', 'umd'],
       fileName: (format) => `use-selectify.${format}.js`,
     },
