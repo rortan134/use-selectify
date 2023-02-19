@@ -87,7 +87,12 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 role="region"
                 aria-labelledby="selectify-selection-box"
                 className={selectionBoxTheme}
-                style={{ position: "absolute", zIndex: "9999", ...selectionBox, ...style }}
+                style={{
+                    position: "absolute",
+                    zIndex: "9999",
+                    ...selectionBox,
+                    ...style,
+                }}
             >
                 <span
                     id="selectify-selection-box"
@@ -138,7 +143,7 @@ export interface UseSelectProps {
      * Auto scroll speed.
      * @defaultValue 40
      */
-    autoScrollStep: number;
+    autoScrollStep?: number;
     /**
      * Will keep every item selected after selection.
      * Can be cleared with clearSelection()
