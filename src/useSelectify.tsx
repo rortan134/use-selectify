@@ -45,8 +45,9 @@ const SELECT_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
     (props: SelectifyComponentProps, forwardedRef) => {
         const {
-            style,
             label,
+            className,
+            style,
             theme = "default",
             selectionBox,
             isDragging,
@@ -86,7 +87,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 id={SELECT_BOX_IDENTIFIER}
                 role="region"
                 aria-labelledby="selectify-selection-box"
-                className={selectionBoxTheme}
+                className={className || selectionBoxTheme}
                 style={{
                     position: "absolute",
                     zIndex: "9999",
@@ -230,6 +231,7 @@ function useSelectify<T extends HTMLElement>(
         disabled,
         forceMount,
     } = options || {};
+    const ownerDocument = globalThis?.document;
 
     const [startPoint, setStartPoint] = React.useState<PositionPoint>(NULL_OBJ);
     const [endPoint, setEndPoint] = React.useState<PositionPoint>(NULL_OBJ);
@@ -346,15 +348,15 @@ function useSelectify<T extends HTMLElement>(
 
     const getIntersectedElements = React.useCallback(
         (intersectionBox: Element, elementsToIntersect: readonly Element[]) => {
-            return elementsToIntersect.flatMap(
-                (item) =>
-                    checkIntersection(
-                        intersectionBox.getBoundingClientRect(),
-                        item.getBoundingClientRect()
-                    )
-                        ? item
-                        : [] // placeholder array, will be removed after .flatMap
-            );
+            const intersectionBoxRect = intersectionBox.getBoundingClientRect();
+            const intersectedElements = [];
+            for (let i = 0; i < elementsToIntersect.length; i++) {
+                const itemRect = elementsToIntersect[i].getBoundingClientRect();
+                if (checkIntersection(intersectionBoxRect, itemRect)) {
+                    intersectedElements.push(elementsToIntersect[i]);
+                }
+            }
+            return intersectedElements;
         },
         [checkIntersection]
     );
@@ -362,6 +364,8 @@ function useSelectify<T extends HTMLElement>(
     // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
         (event: PointerEvent) => {
+            if (typeof window === "undefined") return;
+
             const viewportX = event.clientX;
             const viewportY = event.clientY;
             const viewportWidth = document.documentElement.clientWidth;
@@ -378,7 +382,7 @@ function useSelectify<T extends HTMLElement>(
 
             // stop if the mouse is not in the viewport edge
             if (!(isInLeftEdge || isInRightEdge || isInTopEdge || isInBottomEdge)) {
-                window?.clearTimeout(scrollTimerRef.current);
+                window.clearTimeout(scrollTimerRef.current);
                 return;
             }
 
@@ -402,8 +406,8 @@ function useSelectify<T extends HTMLElement>(
             const maxScrollY = documentHeight - viewportHeight;
 
             const adjustWindowScroll = () => {
-                const currentScrollX = window?.pageXOffset;
-                const currentScrollY = window?.pageYOffset;
+                const currentScrollX = window.pageXOffset;
+                const currentScrollY = window.pageYOffset;
                 const canScrollUp = currentScrollY > 0;
                 const canScrollDown = currentScrollY < maxScrollY;
                 const canScrollLeft = currentScrollX > 0;
@@ -432,7 +436,7 @@ function useSelectify<T extends HTMLElement>(
                 nextScrollY = Math.max(0, Math.min(maxScrollY, nextScrollY));
 
                 if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
-                    window?.scrollTo(nextScrollX, nextScrollY);
+                    window.scrollTo(nextScrollX, nextScrollY);
                     return true;
                 } else {
                     return false;
@@ -443,7 +447,7 @@ function useSelectify<T extends HTMLElement>(
                 clearTimeout(scrollTimerRef.current);
 
                 if (adjustWindowScroll()) {
-                    scrollTimerRef.current = window?.setTimeout(checkForWindowScroll, 30);
+                    scrollTimerRef.current = window.setTimeout(checkForWindowScroll, 30);
                 }
             })();
         },
@@ -562,15 +566,15 @@ function useSelectify<T extends HTMLElement>(
                 cancelRectDraw();
                 triggerOnEscapeKeyDown(event);
             }
-            document.removeEventListener("keydown", handleEscapeKeyCancel);
+            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
         },
-        [cancelRectDraw, triggerOnEscapeKeyDown]
+        [cancelRectDraw, ownerDocument, triggerOnEscapeKeyDown]
     );
 
     const handleDrawRectEnd = React.useCallback(
         (event?: PointerEvent) => {
             const parentNode = ref.current;
-            if (disabled || !parentNode) return;
+            if (disabled || !parentNode || typeof window === "undefined") return;
 
             if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
                 const selectionBoxRef = intersectBoxRef.current;
@@ -593,9 +597,9 @@ function useSelectify<T extends HTMLElement>(
             }
 
             cancelRectDraw();
-            document.removeEventListener("pointerup", handleDrawRectEnd);
-            document.removeEventListener("pointerleave", handleDrawRectEnd);
-            document.removeEventListener("keydown", handleEscapeKeyCancel);
+            ownerDocument.removeEventListener("pointerup", handleDrawRectEnd);
+            ownerDocument.removeEventListener("pointerleave", handleDrawRectEnd);
+            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
             window.removeEventListener("scroll", cancelRectDraw);
 
             if (event) triggerOnDragEnd(event, selectedElements);
@@ -609,6 +613,7 @@ function useSelectify<T extends HTMLElement>(
             handleEscapeKeyCancel,
             handleSelect,
             onlySelectOnDragEnd,
+            ownerDocument,
             ref,
             selectCriteria,
             selectedElements,
@@ -624,7 +629,7 @@ function useSelectify<T extends HTMLElement>(
             const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (disabled || !parentNode || !shouldActivate) {
+            if (disabled || !parentNode || !shouldActivate || typeof window === "undefined") {
                 return;
             }
 
@@ -634,7 +639,7 @@ function useSelectify<T extends HTMLElement>(
                 triggerOnDragStart(event);
 
                 parentNode.addEventListener("pointermove", handleDrawRect);
-                document.addEventListener("keydown", handleEscapeKeyCancel);
+                ownerDocument.addEventListener("keydown", handleEscapeKeyCancel);
 
                 if (hideOnScroll) {
                     if (autoScroll) {
@@ -656,6 +661,7 @@ function useSelectify<T extends HTMLElement>(
             handleDrawRect,
             handleEscapeKeyCancel,
             hideOnScroll,
+            ownerDocument,
             ref,
             triggerOnDragStart,
         ]
@@ -698,10 +704,10 @@ function useSelectify<T extends HTMLElement>(
         };
     }, []);
 
-    useEventListener(ref.current || document, "pointerdown", handleDrawRectStart, true);
+    useEventListener(ref.current || ownerDocument, "pointerdown", handleDrawRectStart, true);
     // add listeners to document for better UX
-    useEventListener(document, "pointerup", handleDrawRectEnd, false);
-    useEventListener(document, "pointerleave", handleDrawRectEnd, false);
+    useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
+    useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (disabled) {
