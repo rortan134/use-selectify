@@ -2362,6 +2362,11 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
+use-selectify@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/use-selectify/-/use-selectify-0.2.5.tgz#a03c319eee3304ce5fe01b4b228642547536ec39"
+  integrity sha512-bUsgw+3RCu7AJeH+HvU9qdzJfaL6EGj5qAvCRkfL17RWDGom0hK+RIMPAcnuXhSXpcqFmHD1j1tIo4aGcaGshg==
+
 util-deprecate@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz"
