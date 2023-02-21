@@ -50,9 +50,11 @@ Created out of need, `use-selectify` is a robust React element selection library
 
 ## Demo
 
-🚧 Work in progress.
+[Notion Demo](https://use-selectify-notion-demo.vercel.app/)
 
-You can check our [Storybook](#development) in the meantime.
+More coming soon...
+
+You can also check our [Storybook](#development) in the meantime.
 
 ## Installation
 
