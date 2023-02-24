@@ -25,7 +25,6 @@
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "react/react-in-jsx-scope": "off",
-        "no-console": "warn",
         "no-alert": "error",
         "react/prop-types": 0,
         "simple-import-sort/imports": "error",

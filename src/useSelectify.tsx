@@ -498,7 +498,7 @@ function useSelectify<T extends HTMLElement>(
             event.preventDefault();
             const parentNode = ref.current;
             const selectionBoxRef = intersectBoxRef.current;
-            if (!parentNode || !selectionBoxRef) {
+            if (!parentNode || !selectionBoxRef || disabled) {
                 return;
             }
 
@@ -540,6 +540,7 @@ function useSelectify<T extends HTMLElement>(
         },
         [
             autoScroll,
+            disabled,
             findMatchingElements,
             getIntersectedElements,
             handleAutomaticWindowScroll,
@@ -628,12 +629,16 @@ function useSelectify<T extends HTMLElement>(
 
     const handleDrawRectStart = React.useCallback(
         (event: PointerEvent) => {
+            if (disabled || IS_SERVER) {
+                return;
+            }
+
             const parentNode = ref.current;
             const shouldActivate = event.button === 0 || event.button === 1;
             const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (disabled || !parentNode || !shouldActivate || IS_SERVER) {
+            if (!parentNode || !shouldActivate) {
                 return;
             }
 
@@ -694,12 +699,16 @@ function useSelectify<T extends HTMLElement>(
 
     const mutateSelections = React.useCallback(
         (update: (lastSelected: readonly Element[]) => Element[]) => {
-            const newSelection = update(lastIntersectedElements.current);
+            const newSelection = update(selectedElements);
             intersectionDifference.current = newSelection;
             handleSelect(newSelection);
         },
-        [handleSelect]
+        [handleSelect, selectedElements]
     );
+
+    const getSelectableElements = React.useCallback(() => {
+        return findMatchingElements({ scope: ref.current, matchCriteria: selectCriteria });
+    }, [findMatchingElements, ref, selectCriteria]);
 
     React.useEffect(() => {
         // cleanup
@@ -708,12 +717,23 @@ function useSelectify<T extends HTMLElement>(
         };
     }, []);
 
-    useEventListener(ref.current || ownerDocument, "pointerdown", handleDrawRectStart, true);
     // add listeners to document for better UX
+    useEventListener(ref.current || ownerDocument, "pointerdown", handleDrawRectStart, true);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
+        if (process.env.NODE_ENV === "development") {
+            // In development we check that the outlet is an actual children of the ref container
+            if (ref.current && Array.isArray(ref.current.children)) {
+                if (ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)) {
+                    console.warn(`<SelectBoxOutlet> should be a direct children of your containerRef <${ref.current.tagName}>.
+                    Try moving it inside of the selection container.
+                    `);
+                }
+            }
+        }
+
         if (disabled) {
             return null;
         }
@@ -728,6 +748,7 @@ function useSelectify<T extends HTMLElement>(
                 theme={theme}
                 label={label}
                 forceMount={Boolean(forceMount)}
+                suppressHydrationWarning
             />
         );
     });
@@ -739,6 +760,7 @@ function useSelectify<T extends HTMLElement>(
         isDragging,
         hasSelected,
         selectionBox,
+        getSelectableElements,
         selectAll,
         clearSelection,
         mutateSelections,

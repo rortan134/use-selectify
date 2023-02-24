@@ -76,6 +76,7 @@ export default () => {
         isDragging,
         hasSelected,
         selectionBox,
+        getSelectableElements,
         selectAll,
         clearSelection,
         mutateSelections,

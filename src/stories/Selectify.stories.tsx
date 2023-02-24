@@ -9,9 +9,32 @@ import SelectedCheckIcon from "./assets/check.svg";
 const Template = (args: UseSelectProps) => {
     const containerRef = React.useRef(null);
 
-    const { SelectBoxOutlet, clearSelection, hasSelected, selectAll } = useSelectify(containerRef, {
+    const {
+        SelectBoxOutlet,
+        clearSelection,
+        hasSelected,
+        selectAll,
+        selectedElements,
+        mutateSelections,
+    } = useSelectify(containerRef, {
         ...args,
     });
+
+    function handleIndividualSelect(elementToSelect: HTMLElement | null | undefined) {
+        if (!elementToSelect) return;
+
+        // check if it isn't alredy selected
+        if (!selectedElements.includes(elementToSelect)) {
+            mutateSelections((prevSelections) => [...prevSelections, elementToSelect]);
+            console.log("selected");
+        } else {
+            // unselect
+            mutateSelections((prevSelections) =>
+                prevSelections.filter((element) => element === elementToSelect)
+            );
+            console.log("Unselected");
+        }
+    }
 
     return (
         <div ref={containerRef} className="table-container">
@@ -34,9 +57,16 @@ const Template = (args: UseSelectProps) => {
                 <div className="table-list">
                     {[...Array(8)].map((_, i) => (
                         <div key={i} className="table-item">
-                            <div className="table-item-icon">
+                            <button
+                                className="table-item-icon"
+                                onClick={(e) =>
+                                    handleIndividualSelect(
+                                        e.currentTarget.parentElement // here we're getting the .table-item element to select
+                                    )
+                                }
+                            >
                                 <img src={SelectedCheckIcon} />
-                            </div>
+                            </button>
                             <span>Articulated</span>
                             <span>Virtual Factory</span>
                             <span>KR-{i + 1 * 1234}</span>
@@ -59,6 +89,12 @@ Basic.args = {
     },
     onUnselect: (el: Element) => {
         el.classList.remove("table-item-active");
+    },
+    onDragStart: () => {
+        document.body.style.userSelect = "none";
+    },
+    onDragEnd: () => {
+        document.body.style.userSelect = "auto";
     },
 };
 
