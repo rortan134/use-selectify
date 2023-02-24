@@ -1,5 +1,6 @@
 {
   "name": "use-selectify",
+  "description": "The ultimate drag-to-select solution for React.",
   "version": "0.2.5",
   "type": "module",
   "repository": {
@@ -24,8 +25,7 @@
   "license": "MIT",
   "sideEffects": false,
   "files": [
-    "dist",
-    "README.md"
+    "dist"
   ],
   "main": "./dist/use-selectify.umd.js",
   "module": "./dist/use-selectify.es.js",

@@ -1,6 +1,8 @@
+"use client";
+
 import "./styles/index.css";
 
-import * as React from "react";
+import React from "react";
 
 import { fastFilter, isNull } from "./utils/misc";
 import { useCallbackRef } from "./utils/useCallbackRef";
@@ -21,6 +23,8 @@ export type BoxBoundingPosition = {
 };
 
 const NULL_OBJ: PositionPoint = Object.freeze({ x: null, y: null });
+
+const IS_SERVER = typeof window === "undefined";
 
 /* -------------------------------------------------------------------------------------------------
  * Select Box Component
@@ -365,7 +369,7 @@ function useSelectify<T extends HTMLElement>(
     // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
         (event: PointerEvent) => {
-            if (typeof window === "undefined") return;
+            if (IS_SERVER) return;
 
             const viewportX = event.clientX;
             const viewportY = event.clientY;
@@ -575,7 +579,7 @@ function useSelectify<T extends HTMLElement>(
     const handleDrawRectEnd = React.useCallback(
         (event?: PointerEvent) => {
             const parentNode = ref.current;
-            if (disabled || !parentNode || typeof window === "undefined") return;
+            if (disabled || !parentNode || IS_SERVER) return;
 
             if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
                 const selectionBoxRef = intersectBoxRef.current;
@@ -630,7 +634,7 @@ function useSelectify<T extends HTMLElement>(
             const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (disabled || !parentNode || !shouldActivate || typeof window === "undefined") {
+            if (disabled || !parentNode || !shouldActivate || IS_SERVER) {
                 return;
             }
 

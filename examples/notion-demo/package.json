@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@next/font": "^13.1.6",
+    "class-variance-authority": "^0.4.0",
     "next": "13.1.6",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "use-selectify": "^0.2.5",
     "zod": "^3.20.2"
   },
   "devDependencies": {
