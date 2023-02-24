@@ -305,6 +305,7 @@ function useSelectify<T extends HTMLElement>(
         }) => {
             if (!scope) return;
 
+            // Convert NodeList to Element[]
             const matchingElements = Array.prototype.slice.call(
                 scope.querySelectorAll(matchCriteria)
             ) as Element[];
@@ -684,13 +685,13 @@ function useSelectify<T extends HTMLElement>(
         // force unselection events
         lastIntersectedElements.current = selectedElements;
         intersectionDifference.current = selectedElements;
-        // wipe selections
+
         handleSelect([]);
     }, [handleSelect, selectedElements]);
 
     const mutateSelections = React.useCallback(
-        (update: (lastSelected: readonly Element[]) => Element[]) => {
-            const newSelection = update(lastIntersectedElements.current);
+        (update: (lastSelected: readonly Element[]) => Element[] | Element[]) => {
+            const newSelection = update?.(lastIntersectedElements.current);
             intersectionDifference.current = newSelection;
             handleSelect(newSelection);
         },
