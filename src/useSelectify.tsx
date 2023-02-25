@@ -822,7 +822,7 @@ function useSelectify<T extends HTMLElement>(
         selectAll,
         clearSelection,
         mutateSelections,
-        cancelSelectionBox: handleDrawRectEnd,
+        cancelSelectionBox: cancelRectDraw,
         options,
     };
 }
