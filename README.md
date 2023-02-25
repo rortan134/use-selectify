@@ -4,8 +4,8 @@
 
 <p align="center">The ultimate drag-to-select solution for React. Designed to be fast; Built to be accessible.</p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/use-selectify">
-    <img alt="NPM Version" src="https://badgen.net/npm/v/use-selectify" />
+  <a href="https://github.com/rortan134/use-selectify/blob/main/CONTRIBUTING.md">
+    <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-blue.svg" />
   </a>
   <a href="https://www.npmjs.com/package/use-selectify">
     <img alt="Types Included" src="https://badgen.net/npm/types/use-selectify" />
@@ -14,7 +14,7 @@
     <img alt="Minizipped Size" src="https://img.shields.io/bundlephobia/minzip/use-selectify" />
   </a>
   <a href="https://github.com/rortan134/use-selectify/blob/main/LICENSE">
-    <img alt="Apache-2.0 License" src="https://badgen.net/github/license/rortan134/use-selectify" />
+    <img alt="MIT License" src="https://badgen.net/github/license/rortan134/use-selectify" />
   </a>
   <a href="https://www.npmjs.com/package/use-selectify">
     <img alt="NPM Downloads" src="https://badgen.net/npm/dm/use-selectify" />
@@ -30,7 +30,7 @@
 
 Drag interactions are one of the most challenging aspects of the web. Having full control of the exact behavior of those interactions is essential, yet most available libraries out there feel like they are still not up to the task.
 
-Created out of need, `use-selectify` is a robust React element selection library that aims to address those issues and provide a powerful starting point for drag interactions while still being an accessible approach to managing both visual and logical selection of elements in a React application with a hook.
+Recognizing this need, `use-selectify` is a robust React element selection library that aims to address these issues and provide a powerful starting point for drag interactions while still being an accessible approach to managing both visual and logical selection of elements in a React application with a hook.
 
 ## Features
 
@@ -235,7 +235,7 @@ const ListItem = ({
 
 export const List = ({ children }: { children: React.ReactNode }) => {
     const containerRef = React.useRef(null);
-    const { selectedElements, SelectBoxOutlet } = useSelectify(selectionContainerRef);
+    const { SelectBoxOutlet, selectedElements } = useSelectify(selectionContainerRef);
 
     return (
         <div ref={containerRef} className="container">
@@ -250,27 +250,26 @@ export const List = ({ children }: { children: React.ReactNode }) => {
 };
 ```
 
-<details>
-<summary>
-Handle unselecting elements on click
-</summary>
+### Declaratively handling selections
 
-Work in progress...
+If you wish to couple the internal hook selections state with your own, you can leverage the `mutateSelections` function. Similarly to a [setState](https://beta.reactjs.org/reference/react/useState), you can modify which elements are internally selected in a declarative way.
 
-</details>
+```tsx
+    const containerRef = React.useRef(null);
+    const { SelectBoxOutlet, mutateSelections } = useSelectify(selectionContainerRef);
+
+    const selectElement = (elementToSelect) => {
+        mutateSelections((prevSelections) => [...prevSelections, elementToSelect])
+    }
+
+    const unselectElement = (elementToUnselect) => {
+        mutateSelections((prevSelections) => prevSelections.filter((element) => element === elementToSelect))
+    }
+```
 
 <details>
 <summary>
 Disabling mobile selection
-</summary>
-
-Work in progress...
-
-</details>
-
-<details>
-<summary>
-Declaratively handle selections
 </summary>
 
 Work in progress...
@@ -310,10 +309,10 @@ Work in progress...
 | disableUnselection      | boolean                                                | false            | Will keep every item selected after selection. Can be cleared with clearSelection().                                                                    |
 | selectCriteria          | string \| undefined                                    | "\*"             | The specific CSS Selector criteria to match for selecting elements.                                                                                     |
 | onlySelectOnFullOverlap | boolean                                                | false            | Will only select the element if the full rect intersects.                                                                                               |
-| onlySelectOnDragEnd     | boolean                                                | false            | Will only select elements after user has stopped dragging or cursor has left the screen.                                                                |
+| onlySelectOnDragEnd     | boolean                                                | false            | Will only select elements after user has stopped dragging or cursor has left the screen while dragging.                                                 |
 | selectionDelay          | number                                                 | 0                | Specify a delay in miliseconds before elements are selected, to prevent accidental selection.                                                           |
 | label                   | string                                                 | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
-| selectionTolerance      | number                                                 | 0                | Distance in px from which elements can be selected even if selection box is not visually intersecting.                                                  |
+| selectionTolerance      | number                                                 | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
 | activateOnMetaKey       | boolean                                                | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
 | activateOnKey           | string[]                                               | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                 | "default"        | Included theme options for the selection box appearance.                                                                                                |
@@ -329,7 +328,7 @@ Work in progress...
 
 ## Accessibility (optional)
 
-To ensure that drag interactions are accessible, we must consider the following aspects:
+By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/ARIA/apg/) best practices. Though to ensure that drag interactions are as accessible as possible, we must consider the following aspects:
 
 1. Add ARIA attributes: To indicate to assistive technology users that the elements are available for selection, we can use an aria-label to each selectable element. This label should be descriptive and informative, indicating either the purpose of selecting that element or how to select it for screen readers. Additionally, we can use the aria-selected attribute to indicate when elements are selected:
 
@@ -342,11 +341,11 @@ To ensure that drag interactions are accessible, we must consider the following 
     // ...
     ```
 
-2. Make elements focusable: To ensure that keyboard-only users can access and select the elements, ensure that every selectable element is also focusable. This means either adding a tabindex attribute to the element and setting it to 0 or using an element that is focusable by default.
+2. Make elements focusable: To ensure that keyboard-only users can access and select the elements, all functionality should be also operable through the [keyboard alone](http://www.w3.org/TR/WCAG20/#keyboard-operation). Ensure that every selectable element is also focusable. This means either adding a tabindex attribute to the element and setting it to 0 or using an element that is focusable by default.
 
 3. Arrow navigation: Make sure every selectable element can also be selected using the arrow keys.
 
-> Tip: By default, user-select is enabled for all elements, which means the user can select text or elements by dragging the cursor over them, to prevent accidental text selection, Disable user-select on the parent container of the selection box
+> Tip: By default, user-select is enabled for all elements, which means the user can select text or elements by dragging the cursor over them, to prevent accidental text selection, Disable user-select on the parent container of the selection box while the user is dragging.
 
 ```css
 -webkit-user-select: none; /* Safari */
