@@ -248,7 +248,7 @@ function useSelectify<T extends HTMLElement>(
     const scrollTimerRef = React.useRef(0);
     const intersectionDifference = React.useRef<Element[]>([]);
     const hasSelected = selectedElements.length > 0;
-    const shouldDelaySelect = selectionDelay && selectionDelay > 0;
+    const shouldDelaySelect = selectionDelay !== undefined && selectionDelay > 0;
 
     const triggerSelectEvent = useCallbackRef(onSelect);
     const triggerUnselectEvent = useCallbackRef(onUnselect);
@@ -284,7 +284,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleSelectionEvent = React.useCallback(
         (elementsToSelect: Element[]) => {
-            window?.clearTimeout(selectionTimerRef.current);
+            window.clearTimeout(selectionTimerRef.current);
             select(elementsToSelect);
         },
         [select]
@@ -293,7 +293,7 @@ function useSelectify<T extends HTMLElement>(
     const handleDelayedSelectionEvent = React.useCallback(
         (elementsToSelect: Element[]) => {
             window?.clearTimeout(selectionTimerRef.current);
-            selectionTimerRef.current = window?.setTimeout(() => {
+            selectionTimerRef.current = window.setTimeout(() => {
                 select(elementsToSelect);
             }, selectionDelay);
         },
@@ -311,6 +311,7 @@ function useSelectify<T extends HTMLElement>(
             if (!scope) return;
 
             // Convert NodeList to Element[]
+            // .slice() has more performance at scale
             const matchingElements = Array.prototype.slice.call(
                 scope.querySelectorAll(matchCriteria)
             ) as Element[];
@@ -366,34 +367,6 @@ function useSelectify<T extends HTMLElement>(
         },
         [checkIntersection]
     );
-
-    React.useEffect(() => {
-        function cancelBrowserTouchActionClaim() {
-            const style = document
-                .querySelector("head")
-                ?.appendChild(document.createElement("style"));
-            style?.title === "use-selectify-temp-styles";
-            style?.sheet?.insertRule(
-                `* {
-                -ms-touch-action: none;
-                touch-action: none;
-                }`,
-                0
-            );
-
-            return () => {
-                style?.remove();
-            };
-        }
-
-        let revert: (() => void) | undefined;
-
-        if (isDragging) {
-            revert = cancelBrowserTouchActionClaim();
-        } else if (revert) {
-            revert();
-        }
-    }, [isDragging]);
 
     // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
@@ -534,10 +507,11 @@ function useSelectify<T extends HTMLElement>(
             scope: parentNode,
             matchCriteria: selectCriteria,
         });
-        if (!canSelectRef.current || !matchingElements || matchingElements.length === 0) {
+        if (!matchingElements || matchingElements.length === 0) {
             return;
         }
 
+        // check intersection against every selectable element
         const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
 
         // Get symetric difference between last intersected elements
@@ -571,6 +545,7 @@ function useSelectify<T extends HTMLElement>(
     const handleDrawRectUpdate = React.useCallback(
         (event: PointerEvent) => {
             const isMultitouch = eventsCacheRef.current.length >= 2;
+            // disable on multitouch for pinch gestures
             if (disabled || isMultitouch) {
                 return;
             }
@@ -717,6 +692,13 @@ function useSelectify<T extends HTMLElement>(
         ]
     );
 
+    // Initial undefined ref.current workaround
+    const [currRender, forceRerender] = React.useState(0);
+    React.useEffect(() => {
+        if (currRender > 0) return;
+        forceRerender((prev) => prev + 1);
+    }, [currRender]);
+
     const selectAll = React.useCallback(() => {
         const allElements = findMatchingElements({
             scope: ref.current,
@@ -739,6 +721,7 @@ function useSelectify<T extends HTMLElement>(
     const mutateSelections = React.useCallback(
         (update: (lastSelected: readonly Element[]) => Element[] | Element[]) => {
             const newSelection = update?.(selectedElements);
+            lastIntersectedElements.current = newElements;
             intersectionDifference.current = newSelection;
             handleSelectionEvent(newSelection);
         },
@@ -750,18 +733,44 @@ function useSelectify<T extends HTMLElement>(
         [findMatchingElements, ref, selectCriteria]
     );
 
-    // Initial undefined ref.current workaround
-    const [currRender, forceRerender] = React.useState(0);
-    React.useEffect(() => {
-        if (currRender > 0) return;
-        forceRerender((prev) => prev + 1);
-    }, [currRender]);
-
     useEventListener(ref.current, "pointerdown", handleDrawRectStart, true);
     useEventListener(ownerDocument, "pointercancel", cancelRectDraw, false);
     useEventListener(ownerDocument, "blur", cancelRectDraw, false);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
+
+    React.useEffect(() => {
+        // prevent browser from trying to claim the pointermove event for panning on mobile
+        function cancelBrowserTouchActionClaim() {
+            const style = document
+                .querySelector("head")
+                ?.appendChild(document.createElement("style"));
+            style?.title === "use-selectify-temp-styles";
+            style?.sheet?.insertRule(
+                `* {
+                -ms-touch-action: none;
+                touch-action: none;
+                }`,
+                0
+            );
+
+            return () => {
+                style?.remove();
+            };
+        }
+
+        let revert: (() => void) | undefined;
+
+        if (isDragging) {
+            revert = cancelBrowserTouchActionClaim();
+        } else {
+            revert?.();
+        }
+
+        return () => {
+            revert?.();
+        };
+    }, [isDragging]);
 
     React.useEffect(() => {
         return () => {
