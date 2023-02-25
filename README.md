@@ -255,16 +255,20 @@ export const List = ({ children }: { children: React.ReactNode }) => {
 If you wish to couple the internal hook selections state with your own, you can leverage the `mutateSelections` function. Similarly to a [setState](https://beta.reactjs.org/reference/react/useState), you can modify which elements are internally selected in a declarative way.
 
 ```tsx
-    const containerRef = React.useRef(null);
-    const { SelectBoxOutlet, mutateSelections } = useSelectify(selectionContainerRef);
+// ...
 
-    const selectElement = (elementToSelect) => {
-        mutateSelections((prevSelections) => [...prevSelections, elementToSelect])
-    }
+const containerRef = React.useRef(null);
+const { SelectBoxOutlet, mutateSelections } = useSelectify(selectionContainerRef);
 
-    const unselectElement = (elementToUnselect) => {
-        mutateSelections((prevSelections) => prevSelections.filter((element) => element === elementToSelect))
-    }
+const selectElement = (elementToSelect) => {
+    mutateSelections((prevSelections) => [...prevSelections, elementToSelect]);
+};
+
+const unselectElement = (elementToUnselect) => {
+    mutateSelections((prevSelections) =>
+        prevSelections.filter((element) => element === elementToSelect)
+    );
+};
 ```
 
 <details>

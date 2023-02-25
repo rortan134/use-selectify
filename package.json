@@ -1,7 +1,7 @@
 {
   "name": "use-selectify",
   "description": "The ultimate drag-to-select solution for React.",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "type": "module",
   "repository": {
     "type": "git",
