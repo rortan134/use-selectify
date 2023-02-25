@@ -103,6 +103,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
 }
 
 .table-item-icon img {
@@ -114,7 +115,6 @@
 .table-item-active .table-item-icon {
     background-color: rgba(0, 0, 0, 0.9);
     color: #ffffff;
-
     border: solid rgba(119, 136, 153, 0.5) 1px;
 }
 

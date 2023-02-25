@@ -76,6 +76,7 @@ export default () => {
         isDragging,
         hasSelected,
         selectionBox,
+        getSelectableElements,
         selectAll,
         clearSelection,
         mutateSelections,
@@ -261,16 +262,10 @@ If you wish to couple the internal hook selections state with your own, you can 
         mutateSelections((prevSelections) => [...prevSelections, elementToSelect])
     }
 
+    const unselectElement = (elementToUnselect) => {
+        mutateSelections((prevSelections) => prevSelections.filter((element) => element === elementToSelect))
+    }
 ```
-
-<details>
-<summary>
-Handle unselecting elements on click
-</summary>
-
-Work in progress...
-
-</details>
 
 <details>
 <summary>
