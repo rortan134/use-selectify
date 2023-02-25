@@ -525,7 +525,7 @@ function useSelectify<T extends HTMLElement>(
     const checkSelectionBoxIntersect = React.useCallback(() => {
         const parentNode = ref.current;
         const selectionBoxRef = intersectBoxRef.current;
-        if (!parentNode || !selectionBoxRef) {
+        if (!parentNode || !selectionBoxRef || disabled) {
             return;
         }
 
@@ -555,6 +555,7 @@ function useSelectify<T extends HTMLElement>(
             else handleSelectionEvent(intersectedElements);
         }
     }, [
+        disabled,
         findMatchingElements,
         getIntersectedElements,
         handleDelayedSelectionEvent,
@@ -773,6 +774,17 @@ function useSelectify<T extends HTMLElement>(
     }, []);
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
+        if (process.env.NODE_ENV === "development") {
+            // In development we check that the outlet is an actual children of the ref container
+            if (ref.current && Array.isArray(ref.current.children)) {
+                if (ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)) {
+                    console.warn(`<SelectBoxOutlet> should be a direct children of your containerRef <${ref.current.tagName}>.
+                    Try moving it inside of the selection container.
+                    `);
+                }
+            }
+        }
+
         if (process.env.NODE_ENV === "development") {
             // In development we check that the outlet is an actual children of the ref container
             if (ref.current && Array.isArray(ref.current.children)) {
