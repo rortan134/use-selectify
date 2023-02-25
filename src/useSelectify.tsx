@@ -637,10 +637,6 @@ function useSelectify<T extends HTMLElement>(
             }
 
             if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
-                const selectionBoxRef = intersectBoxRef.current;
-                if (!selectionBoxRef) {
-                    return;
-                }
                 checkSelectionBoxIntersect();
             }
 
@@ -742,7 +738,7 @@ function useSelectify<T extends HTMLElement>(
 
     const mutateSelections = React.useCallback(
         (update: (lastSelected: readonly Element[]) => Element[] | Element[]) => {
-            const newSelection = update?.(lastIntersectedElements.current);
+            const newSelection = update?.(selectedElements);
             intersectionDifference.current = newSelection;
             handleSelectionEvent(newSelection);
         },
@@ -776,23 +772,22 @@ function useSelectify<T extends HTMLElement>(
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (process.env.NODE_ENV === "development") {
-            // In development we check that the outlet is an actual children of the ref container
-            if (ref.current && Array.isArray(ref.current.children)) {
-                if (ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)) {
+            if (ref.current) {
+                // In development we check that the outlet is an actual children of the ref container
+                if (
+                    Array.isArray(ref.current.children) &&
+                    ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)
+                ) {
                     console.warn(`<SelectBoxOutlet> should be a direct children of your containerRef <${ref.current.tagName}>.
                     Try moving it inside of the selection container.
                     `);
                 }
-            }
-        }
 
-        if (process.env.NODE_ENV === "development") {
-            // In development we check that the outlet is an actual children of the ref container
-            if (ref.current && Array.isArray(ref.current.children)) {
-                if (ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)) {
-                    console.warn(`<SelectBoxOutlet> should be a direct children of your containerRef <${ref.current.tagName}>.
-                    Try moving it inside of the selection container.
-                    `);
+                if (ref.current.scrollWidth > ref.current.clientWidth) {
+                    console.warn(
+                        `use-selectify: <${ref.current?.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
+                        Consider enabling autoScroll.`
+                    );
                 }
             }
         }
