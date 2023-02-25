@@ -1,8 +1,4 @@
-import * as React from "react";
-
-export const isRef = (e: any): e is React.RefObject<any> => {
-    return (e as React.RefObject<any>).current !== undefined;
-};
+import React from "react";
 
 export default function useEventListener<K extends keyof GlobalEventHandlersEventMap>(
     node: HTMLElement | Document | Window | null | undefined,

@@ -1,4 +1,4 @@
-"use client";
+"use client"; // nextjs13 client declaration
 
 import "./styles/index.css";
 
@@ -95,6 +95,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 style={{
                     position: "absolute",
                     zIndex: "9999",
+                    pointerEvents: "none",
                     ...selectionBox,
                     ...style,
                 }}
@@ -281,7 +282,7 @@ function useSelectify<T extends HTMLElement>(
         [disableUnselection, triggerSelectEvent, triggerUnselectEvent]
     );
 
-    const handleSelect = React.useCallback(
+    const handleSelectionEvent = React.useCallback(
         (elementsToSelect: Element[]) => {
             window?.clearTimeout(selectionTimerRef.current);
             select(elementsToSelect);
@@ -289,7 +290,7 @@ function useSelectify<T extends HTMLElement>(
         [select]
     );
 
-    const handleDelayedSelect = React.useCallback(
+    const handleDelayedSelectionEvent = React.useCallback(
         (elementsToSelect: Element[]) => {
             window?.clearTimeout(selectionTimerRef.current);
             selectionTimerRef.current = window?.setTimeout(() => {
@@ -364,6 +365,34 @@ function useSelectify<T extends HTMLElement>(
         },
         [checkIntersection]
     );
+
+    React.useEffect(() => {
+        function cancelBrowserTouchActionClaim() {
+            const style = document
+                .querySelector("head")
+                ?.appendChild(document.createElement("style"));
+            style?.title === "use-selectify-temp-styles";
+            style?.sheet?.insertRule(
+                `* {
+                -ms-touch-action: none;
+                touch-action: none;
+                }`,
+                0
+            );
+
+            return () => {
+                style?.remove();
+            };
+        }
+
+        let revert: (() => void) | undefined;
+
+        if (isDragging) {
+            revert = cancelBrowserTouchActionClaim();
+        } else if (revert) {
+            revert();
+        }
+    }, [isDragging]);
 
     // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
@@ -493,62 +522,84 @@ function useSelectify<T extends HTMLElement>(
         [calculateSelectionBox, endPoint, startPoint]
     );
 
-    const handleDrawRect = React.useCallback(
+    const checkSelectionBoxIntersect = React.useCallback(() => {
+        const parentNode = ref.current;
+        const selectionBoxRef = intersectBoxRef.current;
+        if (!parentNode || !selectionBoxRef) {
+            return;
+        }
+
+        const matchingElements = findMatchingElements({
+            scope: parentNode,
+            matchCriteria: selectCriteria,
+        });
+        if (!canSelectRef.current || !matchingElements || matchingElements.length === 0) {
+            return;
+        }
+
+        const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
+
+        // Get symetric difference between last intersected elements
+        // and latest intersected elements.
+        const difference = intersectedElements
+            .filter((x) => !lastIntersectedElements.current.includes(x))
+            .concat(
+                lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
+            );
+
+        // Check if there's something to be selected
+        // and if so, select it
+        if (difference.length > 0) {
+            intersectionDifference.current = difference;
+            if (shouldDelaySelect) handleDelayedSelectionEvent(intersectedElements);
+            else handleSelectionEvent(intersectedElements);
+        }
+    }, [
+        findMatchingElements,
+        getIntersectedElements,
+        handleDelayedSelectionEvent,
+        handleSelectionEvent,
+        ref,
+        selectCriteria,
+        shouldDelaySelect,
+    ]);
+
+    const eventsCacheRef = React.useRef<PointerEvent[]>([]);
+
+    const handleDrawRectUpdate = React.useCallback(
         (event: PointerEvent) => {
-            event.preventDefault();
-            const parentNode = ref.current;
-            const selectionBoxRef = intersectBoxRef.current;
-            if (!parentNode || !selectionBoxRef) {
+            const isMultitouch = eventsCacheRef.current.length >= 2;
+            if (disabled || isMultitouch) {
                 return;
             }
+
+            const eventIndex = eventsCacheRef.current.findIndex(
+                (cachedEv) => cachedEv.pointerId === event.pointerId
+            );
+            eventsCacheRef.current[eventIndex] = event;
 
             setEndPoint({ x: event.pageX, y: event.pageY });
 
-            // Initiate element selection process
-            const matchingElements = findMatchingElements({
-                scope: ref.current,
-                matchCriteria: selectCriteria,
-            });
-            if (!canSelectRef.current || !matchingElements || matchingElements.length === 0) {
+            if (!canSelectRef.current) {
                 return;
             }
 
-            const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
-
-            // Get symetric difference between last intersected elements
-            // and latest intersected elements.
-            const difference = intersectedElements
-                .filter((x) => !lastIntersectedElements.current.includes(x))
-                .concat(
-                    lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
-                );
-
-            // Check if there's something to be selected
-            if (difference.length > 0) {
-                intersectionDifference.current = difference;
-                if (!onlySelectOnDragEnd) {
-                    if (shouldDelaySelect) handleDelayedSelect(intersectedElements);
-                    else handleSelect(intersectedElements);
-                }
+            if (!onlySelectOnDragEnd) {
+                checkSelectionBoxIntersect();
             }
 
             if (autoScroll) {
                 handleAutomaticWindowScroll(event);
             }
 
-            triggerOnDragMove(event, intersectedElements);
+            triggerOnDragMove(event, lastIntersectedElements.current);
         },
         [
             autoScroll,
-            findMatchingElements,
-            getIntersectedElements,
+            checkSelectionBoxIntersect,
+            disabled,
             handleAutomaticWindowScroll,
-            handleDelayedSelect,
-            handleSelect,
             onlySelectOnDragEnd,
-            ref,
-            selectCriteria,
-            shouldDelaySelect,
             triggerOnDragMove,
         ]
     );
@@ -556,13 +607,14 @@ function useSelectify<T extends HTMLElement>(
     const cancelRectDraw = React.useCallback(() => {
         const parentNode = ref.current;
         if (!parentNode) return;
-        parentNode.removeEventListener("pointermove", handleDrawRect);
+        parentNode.removeEventListener("pointermove", handleDrawRectUpdate, false);
+        window.removeEventListener("scroll", cancelRectDraw);
 
         // reset defaults
         setStartPoint(NULL_OBJ);
         setEndPoint(NULL_OBJ);
         setIsDragging(false);
-    }, [handleDrawRect, ref]);
+    }, [handleDrawRectUpdate, ref]);
 
     const handleEscapeKeyCancel = React.useCallback(
         (event: KeyboardEvent) => {
@@ -578,62 +630,56 @@ function useSelectify<T extends HTMLElement>(
     const handleDrawRectEnd = React.useCallback(
         (event?: PointerEvent) => {
             const parentNode = ref.current;
-            if (disabled || !parentNode || IS_SERVER) return;
+            if (disabled || !parentNode || IS_SERVER) {
+                return;
+            }
 
             if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
                 const selectionBoxRef = intersectBoxRef.current;
-                const matchingElements = findMatchingElements({
-                    scope: ref.current,
-                    matchCriteria: selectCriteria,
-                });
-
-                if (!selectionBoxRef || !matchingElements || matchingElements.length === 0) {
+                if (!selectionBoxRef) {
                     return;
                 }
-
-                const intersectedElements = getIntersectedElements(
-                    selectionBoxRef,
-                    matchingElements
-                );
-
-                if (shouldDelaySelect) handleDelayedSelect(intersectedElements);
-                else handleSelect(intersectedElements);
+                checkSelectionBoxIntersect();
             }
 
             cancelRectDraw();
-            ownerDocument.removeEventListener("pointerup", handleDrawRectEnd);
-            ownerDocument.removeEventListener("pointerleave", handleDrawRectEnd);
             ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
-            window.removeEventListener("scroll", cancelRectDraw);
 
-            if (event) triggerOnDragEnd(event, selectedElements);
+            if (event) {
+                // Remove this event from the target's cache
+                const eventIndex = eventsCacheRef.current.findIndex(
+                    (cachedEv) => cachedEv.pointerId === event.pointerId
+                );
+                eventsCacheRef.current.splice(eventIndex, 1);
+
+                triggerOnDragEnd(event, selectedElements);
+            }
         },
         [
             cancelRectDraw,
+            checkSelectionBoxIntersect,
             disabled,
-            findMatchingElements,
-            getIntersectedElements,
-            handleDelayedSelect,
             handleEscapeKeyCancel,
-            handleSelect,
             onlySelectOnDragEnd,
             ownerDocument,
             ref,
-            selectCriteria,
             selectedElements,
-            shouldDelaySelect,
             triggerOnDragEnd,
         ]
     );
 
     const handleDrawRectStart = React.useCallback(
         (event: PointerEvent) => {
+            if (disabled || IS_SERVER) {
+                return;
+            }
+
             const parentNode = ref.current;
-            const shouldActivate = event.button === 0 || event.button === 1;
+            const shouldActivate = event.button === 0 || event.button === 1 || event.isPrimary;
             const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (disabled || !parentNode || !shouldActivate || IS_SERVER) {
+            if (!parentNode || !shouldActivate) {
                 return;
             }
 
@@ -642,8 +688,10 @@ function useSelectify<T extends HTMLElement>(
                 setIsDragging(true);
                 triggerOnDragStart(event);
 
-                parentNode.addEventListener("pointermove", handleDrawRect);
+                parentNode.addEventListener("pointermove", handleDrawRectUpdate, false);
                 ownerDocument.addEventListener("keydown", handleEscapeKeyCancel);
+
+                eventsCacheRef.current.push(event);
 
                 if (hideOnScroll) {
                     if (autoScroll) {
@@ -662,7 +710,7 @@ function useSelectify<T extends HTMLElement>(
             autoScroll,
             cancelRectDraw,
             disabled,
-            handleDrawRect,
+            handleDrawRectUpdate,
             handleEscapeKeyCancel,
             hideOnScroll,
             ownerDocument,
@@ -680,40 +728,62 @@ function useSelectify<T extends HTMLElement>(
 
         // force selection events
         intersectionDifference.current = allElements;
-
-        handleSelect(allElements);
-    }, [findMatchingElements, handleSelect, ref, selectCriteria]);
+        handleSelectionEvent(allElements);
+    }, [findMatchingElements, handleSelectionEvent, ref, selectCriteria]);
 
     const clearSelection = React.useCallback(() => {
         // force unselection events
         lastIntersectedElements.current = selectedElements;
         intersectionDifference.current = selectedElements;
-        // wipe selections
-        handleSelect([]);
-    }, [handleSelect, selectedElements]);
+        handleSelectionEvent([]);
+    }, [handleSelectionEvent, selectedElements]);
 
     const mutateSelections = React.useCallback(
         (update: (lastSelected: readonly Element[]) => Element[]) => {
-            const newSelection = update(lastIntersectedElements.current);
+            const newSelection = update(selectedElements);
             intersectionDifference.current = newSelection;
-            handleSelect(newSelection);
+            handleSelectionEvent(newSelection);
         },
-        [handleSelect]
+        [handleSelectionEvent, selectedElements]
     );
 
-    React.useEffect(() => {
-        // cleanup
-        return () => {
-            window?.clearTimeout(selectionTimerRef.current);
-        };
-    }, []);
+    const getSelectableElements = React.useCallback(
+        () => findMatchingElements({ scope: ref.current, matchCriteria: selectCriteria }),
+        [findMatchingElements, ref, selectCriteria]
+    );
 
-    useEventListener(ref.current || ownerDocument, "pointerdown", handleDrawRectStart, true);
-    // add listeners to document for better UX
+    // Initial undefined ref.current workaround
+    const [currRender, forceRerender] = React.useState(0);
+    React.useEffect(() => {
+        if (currRender > 0) return;
+        forceRerender((prev) => prev + 1);
+    }, [currRender]);
+
+    useEventListener(ref.current, "pointerdown", handleDrawRectStart, true);
+    useEventListener(ownerDocument, "pointercancel", cancelRectDraw, false);
+    useEventListener(ownerDocument, "blur", cancelRectDraw, false);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
 
+    React.useEffect(() => {
+        return () => {
+            // cleanup
+            window.clearTimeout(selectionTimerRef.current);
+        };
+    }, []);
+
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
+        if (process.env.NODE_ENV === "development") {
+            // In development we check that the outlet is an actual children of the ref container
+            if (ref.current && Array.isArray(ref.current.children)) {
+                if (ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)) {
+                    console.warn(`<SelectBoxOutlet> should be a direct children of your containerRef <${ref.current.tagName}>.
+                    Try moving it inside of the selection container.
+                    `);
+                }
+            }
+        }
+
         if (disabled) {
             return null;
         }
@@ -728,6 +798,7 @@ function useSelectify<T extends HTMLElement>(
                 theme={theme}
                 label={label}
                 forceMount={Boolean(forceMount)}
+                suppressHydrationWarning
             />
         );
     });
@@ -739,6 +810,7 @@ function useSelectify<T extends HTMLElement>(
         isDragging,
         hasSelected,
         selectionBox,
+        getSelectableElements,
         selectAll,
         clearSelection,
         mutateSelections,
