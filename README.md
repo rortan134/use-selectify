@@ -44,7 +44,7 @@ Recognizing this need, `use-selectify` is a robust React element selection libra
 
 ✅ Simple to Style
 
-✅ Works on mobile
+✅ Works on every device
 
 ✅ SSR Support
 
@@ -266,7 +266,7 @@ const selectElement = (elementToSelect) => {
 
 const unselectElement = (elementToUnselect) => {
     mutateSelections((prevSelections) =>
-        prevSelections.filter((element) => element === elementToSelect)
+        prevSelections.filter((element) => element !== elementToSelect)
     );
 };
 ```
