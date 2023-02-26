@@ -510,6 +510,16 @@ function useSelectify<T extends HTMLElement>(
         [calculateSelectionBox, endPoint, startPoint]
     );
 
+    const getIntersectionsDifference = React.useCallback((intersectedElements: Element[]) => {
+        // Get symetric difference between last intersected elements
+        // and latest intersected elements.
+        return intersectedElements
+            .filter((x) => !lastIntersectedElements.current.includes(x))
+            .concat(
+                lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
+            );
+    }, []);
+
     const checkSelectionBoxIntersect = React.useCallback(() => {
         const parentNode = ref.current;
         const selectionBoxRef = intersectBoxRef.current;
@@ -527,14 +537,7 @@ function useSelectify<T extends HTMLElement>(
 
         // check intersection against every selectable element
         const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
-
-        // Get symetric difference between last intersected elements
-        // and latest intersected elements.
-        const difference = intersectedElements
-            .filter((x) => !lastIntersectedElements.current.includes(x))
-            .concat(
-                lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
-            );
+        const difference = getIntersectionsDifference(intersectedElements);
 
         // Check if there's something to be selected
         // and if so, select it
@@ -546,6 +549,7 @@ function useSelectify<T extends HTMLElement>(
     }, [
         disabled,
         findMatchingElements,
+        getIntersectionsDifference,
         getIntersectedElements,
         handleDelayedSelectionEvent,
         handleSelectionEvent,
@@ -737,11 +741,10 @@ function useSelectify<T extends HTMLElement>(
     const mutateSelections = React.useCallback(
         (update: (lastSelected: readonly Element[]) => Element[] | Element[]) => {
             const newSelection = update?.(selectedElements);
-            lastIntersectedElements.current = newElements;
-            intersectionDifference.current = newSelection;
+            intersectionDifference.current = getIntersectionsDifference(newSelection);
             handleSelectionEvent(newSelection);
         },
-        [handleSelectionEvent, selectedElements]
+        [getIntersectionsDifference, handleSelectionEvent, selectedElements]
     );
 
     const getSelectableElements = React.useCallback(
