@@ -26,6 +26,20 @@ const NULL_OBJ: PositionPoint = Object.freeze({ x: null, y: null });
 
 const IS_SERVER = typeof window === "undefined";
 
+function throttle(timer: (frame: FrameRequestCallback) => number) {
+    let queuedCallback: (() => void) | null;
+    return (callback: () => void) => {
+        if (!queuedCallback) {
+            timer(() => {
+                const cb = queuedCallback;
+                queuedCallback = null;
+                cb?.();
+            });
+        }
+        queuedCallback = callback;
+    };
+}
+
 /* -------------------------------------------------------------------------------------------------
  * Select Box Component
  * -----------------------------------------------------------------------------------------------*/
@@ -356,8 +370,8 @@ function useSelectify<T extends HTMLElement>(
     const getIntersectedElements = React.useCallback(
         (intersectionBox: Element, elementsToIntersect: readonly Element[]) => {
             const intersectionBoxRect = intersectionBox.getBoundingClientRect();
-            const intersectedElements = [];
-            for (let i = 0; i < elementsToIntersect.length; i++) {
+            const intersectedElements: Element[] = [];
+            for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
                 const itemRect = elementsToIntersect[i].getBoundingClientRect();
                 if (checkIntersection(intersectionBoxRect, itemRect)) {
                     intersectedElements.push(elementsToIntersect[i]);
@@ -541,6 +555,7 @@ function useSelectify<T extends HTMLElement>(
     ]);
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
+    const throttledRequestAnimationFrame = useCallbackRef(throttle(requestAnimationFrame));
 
     const handleDrawRectUpdate = React.useCallback(
         (event: PointerEvent) => {
@@ -562,7 +577,7 @@ function useSelectify<T extends HTMLElement>(
             }
 
             if (!onlySelectOnDragEnd) {
-                checkSelectionBoxIntersect();
+                throttledRequestAnimationFrame(checkSelectionBoxIntersect);
             }
 
             if (autoScroll) {
@@ -577,6 +592,7 @@ function useSelectify<T extends HTMLElement>(
             disabled,
             handleAutomaticWindowScroll,
             onlySelectOnDragEnd,
+            throttledRequestAnimationFrame,
             triggerOnDragMove,
         ]
     );
