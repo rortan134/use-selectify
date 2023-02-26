@@ -6,10 +6,10 @@ yarn-error.log*
 *.tsbuildinfo
 
 node_modules
+storybook-static
 dist
 dist-ssr
 *.local
 
-.storybook
 .vscode/*
 !.vscode/extensions.json
