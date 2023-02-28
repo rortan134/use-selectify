@@ -2,7 +2,7 @@
 
 import "./styles/index.css";
 
-import React from "react";
+import * as React from "react";
 
 import { fastFilter, isNull } from "./utils/misc";
 import { useCallbackRef } from "./utils/useCallbackRef";
@@ -51,6 +51,7 @@ export type Theme = "default" | "outline";
 
 interface SelectifyComponentProps extends React.ComponentPropsWithoutRef<"div"> {
     selectionBox: BoxBoundingPosition | null;
+    parentRef: React.RefObject<HTMLElement | null | undefined>;
     isDragging: boolean;
     overlappedElementsCount: number;
     label: string | undefined;
@@ -60,12 +61,23 @@ interface SelectifyComponentProps extends React.ComponentPropsWithoutRef<"div"> 
 
 const SELECT_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 
+const srOnlyStyles = {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: "0",
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    borderWidth: "0",
+} as const;
+
 const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
     (props: SelectifyComponentProps, forwardedRef) => {
         const {
+            parentRef,
             label,
-            className,
-            style,
             theme = "default",
             selectionBox,
             isDragging,
@@ -75,7 +87,8 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
             ...selectBoxProps
         } = props;
 
-        const wasDragActive = React.useRef(false);
+        const boxId = React.useId();
+        const wasDragActiveRef = React.useRef(false);
         const selectionBoxTheme = `selectify_selection-box_${theme}-theme`;
 
         const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
@@ -84,19 +97,26 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
         React.useEffect(() => {
             React.startTransition(() => {
                 // Handle label
-                if (wasDragActive.current) {
+                if (wasDragActiveRef.current) {
                     setLiveText("Drag Selection Off");
                     return;
                 }
 
                 setLiveText(`${screenReaderLabel}: ${overlappedElementsCount} elements selected`);
-                wasDragActive.current = true;
+                wasDragActiveRef.current = true;
             });
 
             return () => {
-                wasDragActive.current = false;
+                wasDragActiveRef.current = false;
             };
         }, [overlappedElementsCount, screenReaderLabel]);
+
+        // copy z-index from content to wrapper
+        const [contentZIndex, setContentZIndex] = React.useState<string>();
+        React.useLayoutEffect(() => {
+            if (parentRef.current)
+                setContentZIndex(window.getComputedStyle(parentRef.current).zIndex);
+        }, [parentRef]);
 
         return isDragging && !forceMount ? (
             <div
@@ -104,31 +124,20 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 ref={forwardedRef}
                 id={SELECT_BOX_IDENTIFIER}
                 role="region"
-                aria-labelledby="selectify-selection-box"
-                className={className || selectionBoxTheme}
+                aria-labelledby={boxId}
+                tabIndex={-1}
+                className={props.className || selectionBoxTheme}
                 style={{
+                    // Ensure border-box for floating-ui calculations
+                    boxSizing: "border-box",
                     position: "absolute",
-                    zIndex: "9999",
                     pointerEvents: "none",
+                    zIndex: contentZIndex,
                     ...selectionBox,
-                    ...style,
+                    ...props.style,
                 }}
             >
-                <span
-                    id="selectify-selection-box"
-                    aria-live={isDragging ? "assertive" : "off"}
-                    style={{
-                        position: "absolute",
-                        width: "1px",
-                        height: "1px",
-                        padding: "0",
-                        margin: "-1px",
-                        overflow: "hidden",
-                        clip: "rect(0, 0, 0, 0)",
-                        whiteSpace: "nowrap",
-                        borderWidth: "0",
-                    }}
-                >
+                <span id={boxId} aria-live="assertive" style={srOnlyStyles}>
                     {liveText}
                 </span>
             </div>
@@ -141,6 +150,8 @@ SelectBox.displayName = SELECT_BOX_NAME;
 /* -------------------------------------------------------------------------------------------------
  * Selectify Hook
  * -----------------------------------------------------------------------------------------------*/
+
+const DEFAULT_SELECT_CRITERIA = "*";
 
 export interface UseSelectProps {
     /**
@@ -215,7 +226,7 @@ export interface UseSelectProps {
     forceMount?: boolean;
     onSelect?(element: Element): void;
     onUnselect?(unselectedElement: Element): void;
-    onDragStart?(e: PointerEvent): void;
+    onDragStart?(e: PointerEvent): void | (() => void);
     onDragMove?(e: PointerEvent, selectedElements: Element[]): void;
     onDragEnd?(e: PointerEvent, selectedElements: Element[]): void;
     onEscapeKeyDown?(e: KeyboardEvent): void;
@@ -226,7 +237,7 @@ function useSelectify<T extends HTMLElement>(
     options?: UseSelectProps
 ) {
     const {
-        selectCriteria = "*",
+        selectCriteria = DEFAULT_SELECT_CRITERIA,
         maxSelections = false,
         autoScroll = true,
         autoScrollEdgeDistance = 100,
@@ -306,7 +317,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleDelayedSelectionEvent = React.useCallback(
         (elementsToSelect: Element[]) => {
-            window?.clearTimeout(selectionTimerRef.current);
+            window.clearTimeout(selectionTimerRef.current);
             selectionTimerRef.current = window.setTimeout(() => {
                 select(elementsToSelect);
             }, selectionDelay);
@@ -535,12 +546,11 @@ function useSelectify<T extends HTMLElement>(
             return;
         }
 
-        // check intersection against every selectable element
+        // Check intersection against every selectable element
         const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
         const difference = getIntersectionsDifference(intersectedElements);
 
-        // Check if there's something to be selected
-        // and if so, select it
+        // Check if there's something to be selected and if so, select it
         if (difference.length > 0) {
             intersectionDifference.current = difference;
             if (shouldDelaySelect) handleDelayedSelectionEvent(intersectedElements);
@@ -560,20 +570,22 @@ function useSelectify<T extends HTMLElement>(
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
     const throttledRequestAnimationFrame = useCallbackRef(throttle(requestAnimationFrame));
+    const isMultitouch = eventsCacheRef.current.length >= 2;
 
     const handleDrawRectUpdate = React.useCallback(
         (event: PointerEvent) => {
-            const isMultitouch = eventsCacheRef.current.length >= 2;
-            // disable on multitouch for pinch gestures
+            // Disable on multitouch for pinch and other gestures
             if (disabled || isMultitouch) {
                 return;
             }
 
+            // Update last cache to current one
             const eventIndex = eventsCacheRef.current.findIndex(
                 (cachedEv) => cachedEv.pointerId === event.pointerId
             );
             eventsCacheRef.current[eventIndex] = event;
 
+            // Start drawing box
             setEndPoint({ x: event.pageX, y: event.pageY });
 
             if (!canSelectRef.current) {
@@ -581,6 +593,7 @@ function useSelectify<T extends HTMLElement>(
             }
 
             if (!onlySelectOnDragEnd) {
+                // Only throttle selection and not drawing to keep it fluid
                 throttledRequestAnimationFrame(checkSelectionBoxIntersect);
             }
 
@@ -595,6 +608,7 @@ function useSelectify<T extends HTMLElement>(
             checkSelectionBoxIntersect,
             disabled,
             handleAutomaticWindowScroll,
+            isMultitouch,
             onlySelectOnDragEnd,
             throttledRequestAnimationFrame,
             triggerOnDragMove,
@@ -631,7 +645,7 @@ function useSelectify<T extends HTMLElement>(
                 return;
             }
 
-            if (onlySelectOnDragEnd && intersectionDifference.current.length > 0) {
+            if (onlySelectOnDragEnd && intersectionDifference.current.length > 0 && !isMultitouch) {
                 checkSelectionBoxIntersect();
             }
 
@@ -639,7 +653,7 @@ function useSelectify<T extends HTMLElement>(
             ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
 
             if (event) {
-                // Remove this event from the target's cache
+                // Remove current event from the cache
                 const eventIndex = eventsCacheRef.current.findIndex(
                     (cachedEv) => cachedEv.pointerId === event.pointerId
                 );
@@ -653,6 +667,7 @@ function useSelectify<T extends HTMLElement>(
             checkSelectionBoxIntersect,
             disabled,
             handleEscapeKeyCancel,
+            isMultitouch,
             onlySelectOnDragEnd,
             ownerDocument,
             ref,
@@ -669,21 +684,36 @@ function useSelectify<T extends HTMLElement>(
 
             const parentNode = ref.current;
             const shouldActivate = event.button === 0 || event.button === 1 || event.isPrimary;
-            const isMetaKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+            const isModifierKey = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (!parentNode || !shouldActivate) {
+            if (!parentNode || !shouldActivate || isMultitouch) {
                 return;
             }
 
-            if (!activateOnMetaKey || (activateOnMetaKey && isMetaKey) || userKeyPressed) {
+            if (!activateOnMetaKey || (activateOnMetaKey && isModifierKey) || userKeyPressed) {
+                // prevent implicit pointer capture
+                // https://www.w3.org/TR/pointerevents3/#implicit-pointer-capture
+                const target = event.target as HTMLElement;
+                if (target.hasPointerCapture(event.pointerId)) {
+                    target.releasePointerCapture(event.pointerId);
+                }
+
+                const callback = triggerOnDragStart(event);
+                callback?.();
+
+                if (event.defaultPrevented) {
+                    console.warn("use-selectify: Event prevented, stopping execution.");
+                    return;
+                }
+
                 setStartPoint({ x: event.pageX, y: event.pageY });
                 setIsDragging(true);
-                triggerOnDragStart(event);
 
                 parentNode.addEventListener("pointermove", handleDrawRectUpdate, false);
                 ownerDocument.addEventListener("keydown", handleEscapeKeyCancel);
 
+                // Add event to cache
                 eventsCacheRef.current.push(event);
 
                 if (hideOnScroll) {
@@ -706,18 +736,12 @@ function useSelectify<T extends HTMLElement>(
             handleDrawRectUpdate,
             handleEscapeKeyCancel,
             hideOnScroll,
+            isMultitouch,
             ownerDocument,
             ref,
             triggerOnDragStart,
         ]
     );
-
-    // Initial undefined ref.current workaround
-    const [currRender, forceRerender] = React.useState(0);
-    React.useEffect(() => {
-        if (currRender > 0) return;
-        forceRerender((prev) => prev + 1);
-    }, [currRender]);
 
     const selectAll = React.useCallback(() => {
         const allElements = findMatchingElements({
@@ -752,51 +776,51 @@ function useSelectify<T extends HTMLElement>(
         [findMatchingElements, ref, selectCriteria]
     );
 
+    const resetEventsCache = useCallbackRef(() => (eventsCacheRef.current = []));
+
     useEventListener(ref.current, "pointerdown", handleDrawRectStart, true);
     useEventListener(ownerDocument, "pointercancel", cancelRectDraw, false);
     useEventListener(ownerDocument, "blur", cancelRectDraw, false);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
+    useEventListener(window, "resize", resetEventsCache, false);
 
+    // Initial undefined `ref.current` workaround
+    const [currRender, forceRerender] = React.useState(0);
     React.useEffect(() => {
-        // prevent browser from trying to claim the pointermove event for panning on mobile
-        function cancelBrowserTouchActionClaim() {
-            const style = document
-                .querySelector("head")
-                ?.appendChild(document.createElement("style"));
-            style?.title === "use-selectify-temp-styles";
-            style?.sheet?.insertRule(
-                `* {
-                -ms-touch-action: none;
-                touch-action: none;
-                }`,
-                0
-            );
+        if (currRender > 0) return;
+        forceRerender((prev) => prev + 1);
+        return () => forceRerender(0);
+    }, [currRender]);
 
+    React.useLayoutEffect(() => {
+        // prevent browser from trying to claim the pointermove event for panning on mobile
+        // without this the selection box does not work properly when scroll is present
+        function cancelBrowserTouchActionClaim() {
+            const parentNode = ref.current;
+            if (!parentNode) return;
+            const lastStyle = parentNode.style.touchAction;
+            parentNode.style.touchAction = "none";
             return () => {
-                style?.remove();
+                parentNode.style.touchAction = lastStyle;
             };
         }
 
-        let revert: (() => void) | undefined;
-
-        if (isDragging) {
-            revert = cancelBrowserTouchActionClaim();
-        } else {
-            revert?.();
-        }
+        const revert = cancelBrowserTouchActionClaim();
 
         return () => {
             revert?.();
         };
-    }, [isDragging]);
+    }, [ref]);
 
     React.useEffect(() => {
         return () => {
             // cleanup
             window.clearTimeout(selectionTimerRef.current);
+            cancelRectDraw();
+            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
         };
-    }, []);
+    }, [cancelRectDraw, handleEscapeKeyCancel, ownerDocument]);
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (process.env.NODE_ENV === "development") {
@@ -828,6 +852,7 @@ function useSelectify<T extends HTMLElement>(
             <SelectBox
                 {...props}
                 ref={intersectBoxRef}
+                parentRef={ref}
                 selectionBox={selectionBox}
                 isDragging={isDragging}
                 overlappedElementsCount={selectedElements.length + 1}
