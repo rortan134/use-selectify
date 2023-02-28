@@ -40,6 +40,8 @@ function throttle(timer: (frame: FrameRequestCallback) => number) {
     };
 }
 
+const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
+
 /* -------------------------------------------------------------------------------------------------
  * Select Box Component
  * -----------------------------------------------------------------------------------------------*/
@@ -793,7 +795,7 @@ function useSelectify<T extends HTMLElement>(
         return () => forceRerender(0);
     }, [currRender]);
 
-    React.useLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         // prevent browser from trying to claim the pointermove event for panning on mobile
         // without this the selection box does not work properly when scroll is present
         function cancelBrowserTouchActionClaim() {
