@@ -798,7 +798,7 @@ function useSelectify<T extends HTMLElement>(
         // without this the selection box does not work properly when scroll is present
         function cancelBrowserTouchActionClaim() {
             const parentNode = ref.current;
-            if (!parentNode) return;
+            if (!parentNode || disabled) return;
             const lastStyle = parentNode.style.touchAction;
             parentNode.style.touchAction = "none";
             return () => {
@@ -811,7 +811,7 @@ function useSelectify<T extends HTMLElement>(
         return () => {
             revert?.();
         };
-    }, [ref]);
+    }, [disabled, ref]);
 
     React.useEffect(() => {
         return () => {
