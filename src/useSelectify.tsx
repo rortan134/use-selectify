@@ -780,14 +780,14 @@ function useSelectify<T extends HTMLElement>(
 
     const clearSelection = React.useCallback(() => {
         // force unselection events
+        intersectionDifference.current = getIntersectionsDifference([]);
         lastIntersectedElements.current = selectedElements;
-        intersectionDifference.current = selectedElements;
         handleSelectionEvent([]);
-    }, [handleSelectionEvent, selectedElements]);
+    }, [getIntersectionsDifference, handleSelectionEvent, selectedElements]);
 
     const mutateSelections = React.useCallback(
-        (update: (lastSelected: readonly Element[]) => Element[] | Element[]) => {
-            const newSelection = update?.(selectedElements);
+        (update: ((lastSelected: readonly Element[]) => Element[]) | Element[]) => {
+            const newSelection = update instanceof Function ? update(selectedElements) : update;
             intersectionDifference.current = getIntersectionsDifference(newSelection);
             handleSelectionEvent(newSelection);
         },
