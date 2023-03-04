@@ -363,11 +363,11 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 Drawing your own selection box
 </summary>
 
+Start by creating your box component and pass in the provided `selectionBoxRef`, then apply the `selectionBox` to the styles for the pointer coordinates.
+
 > **Note**
 >
 > You will not have any of the accessibility features included by default.
-
-Start by creating your box component and pass in the provided `selectionBoxRef`, then apply the `selectionBox` to the styles for the pointer coordinates.
 
 ```tsx
 export function App() {
@@ -431,7 +431,7 @@ Work in progress...
 | activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
-| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from the specified elements.                                                       |
+| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
 | onSelect                | (element: Element) => void                               | -                | Callback function when an element is selected.                                                                                                          |
