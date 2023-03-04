@@ -571,7 +571,7 @@ function useSelectify<T extends HTMLElement>(
     ]);
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
-    const throttledRequestAnimationFrame = useCallbackRef(throttle(requestAnimationFrame));
+    const throttledRequestAnimationFrame = useCallbackRef(throttle(window.requestAnimationFrame));
     const isMultitouch = eventsCacheRef.current.length >= 2;
 
     const handleDrawRectUpdate = React.useCallback(
