@@ -17,6 +17,9 @@
     <img alt="MIT License" src="https://badgen.net/github/license/rortan134/use-selectify" />
   </a>
   <a href="https://www.npmjs.com/package/use-selectify">
+    <img alt="Package Version" src="https://img.shields.io/npm/v/use-selectify.svg?colorB=green" />
+  </a>
+  <a href="https://www.npmjs.com/package/use-selectify">
     <img alt="NPM Downloads" src="https://badgen.net/npm/dm/use-selectify" />
   </a>
   <a href="https://twitter.com/meetgilberto">
@@ -28,40 +31,38 @@
 
 ## Introduction
 
-Drag interactions are one of the most challenging aspects of the web. Having full control of the exact behavior of those interactions is essential, yet most available libraries out there feel like they are still not up to the task.
+Drag interactions are one of the most challenging aspects of the web. Having full control over the exact behavior of those interactions is essential, yet most available libraries out there feel like they are still not up to the task.
 
-Recognizing this need, `use-selectify` is a robust React element selection library that aims to address these issues and provide a powerful starting point for drag interactions while still being an accessible approach to managing both visual and logical selection of elements in a React application with a hook.
+Recognizing this need, `use-selectify` was created aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
+
+<!-- Demo & Examples: [use-selectify.vercel.app](https://use-selectify.vercel.app/) -->
 
 ## Features
 
-✅ Automatic Window Scrolling
+✅ Automatic window scrolling
 
-✅ Flexible and [Lightweight](https://bundlephobia.com/package/use-selectify) (3kB gzipped)
+✅ Flexible and [lightweight](https://bundlephobia.com/package/use-selectify) (4kB gzipped)
 
-✅ Accessible by Default
+✅ Accessible by default
 
-✅ Fine-Grained Control
+✅ Fine-grained control
 
-✅ Simple to Style
+✅ Simple to style
 
 ✅ Works on every device
 
-✅ SSR Support
-
-## Demo
-
-[Notion Demo](https://use-selectify-notion-demo.vercel.app/)
-
-More coming soon...
-
-You can also check our [Storybook](#development) in the meantime.
+✅ SSR support
 
 ## Installation
 
 ```sh
-$ npm i use-selectify
+npm install use-selectify
+```
+
 or
-$ yarn add use-selectify
+
+```sh
+yarn add use-selectify
 ```
 
 ## Anatomy
@@ -88,6 +89,21 @@ export default () => {
 
 -   `ref`: A RefObject containing the parent element that will trigger the selection interactions.
 -   `options` (optional): An [object](#options) containing options that can be used to configure the selection behavior.
+
+<details>
+<summary>See every prop</summary>
+-   `SelectBoxOutlet`: The returned selection box component.
+-   `selectedElements`: A list of every element that has been selected through the hook.
+-   `isDragging`: Whether the user's pointer is dragging or not.
+-   `hasSelected`: Whether there's any element selected. Equal to `selectedElements.length > 0`.
+-   `selectionBox`: A Rect indicating the internal values of the SelectBoxOutlet coordinates.
+-   `getSelectableElements`: An utility function that returns every selectable element relative to the specified [selection criteria](#options)
+-   `selectAll`: An utility function that will select every selectableElement.
+-   `clearSelection`: An utility function that will unselect every selected element.
+-   `mutateSelections`: An utility function, similar to a [setState](https://beta.reactjs.org/reference/react/useState), that allows you to modify internal selections.
+-   `cancelSelectionBox`: An utility function that will instantly cancel the drag-selection without selecting any element.
+-   `options`: A copy of the internal hook options.
+</details>
 
 ## Getting Started
 
@@ -170,15 +186,19 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 
 ### Styling
 
-By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component.
+By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component. For Styled Components or Stitches see [how to render your own selection box](#more-usages).
 
+> **Note**
+>
 > For the absolute positioning to work properly on the selection box, the parent element of the outlet should always be relative: `position: relative;`
 
 ```tsx
-<div ref={selectionContainerRef} style={{ position: "relative" }}>
-    // ...
-    <SelectBoxOutlet className="foo bar" />
-</div>
+return (
+    <div ref={selectionContainerRef} style={{ position: "relative" }}>
+        // ...
+        <SelectBoxOutlet className="foo bar" />
+    </div>
+);
 ```
 
 Available default themes: `default` | `outline`
@@ -258,7 +278,7 @@ If you wish to couple the internal hook selections state with your own, you can 
 // ...
 
 const containerRef = React.useRef(null);
-const { SelectBoxOutlet, mutateSelections } = useSelectify(selectionContainerRef);
+const { SelectBoxOutlet, selectedElements, mutateSelections } = useSelectify(selectionContainerRef);
 
 const selectElement = (elementToSelect) => {
     mutateSelections((prevSelections) => [...prevSelections, elementToSelect]);
@@ -271,12 +291,69 @@ const unselectElement = (elementToUnselect) => {
 };
 ```
 
+### Other use-cases
+
 <details>
 <summary>
 Disabling mobile selection
 </summary>
 
-Work in progress...
+Use something like [react-device-detect](https://www.npmjs.com/package/react-device-detect) to distinguish if the user-agent is a mobile device or not, then simply disable the hook accordingly.
+
+```tsx
+import * as React from "react";
+import { isMobile } from "react-device-detect";
+import { useSelectify } from "use-selectify";
+
+export default function App() {
+    const selectionContainerRef = React.useRef(null);
+    const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+        disabled: isMobile,
+    });
+
+    return (
+        <div ref={selectionContainerRef} style={{ position: "relative" }}>
+            <div>Hello World</div>
+            <SelectBoxOutlet />
+        </div>
+    );
+}
+```
+
+</details>
+
+<details>
+<summary>
+Checking whether to start selecting or not
+</summary>
+If you wanted to check whether an user will start a pinch gesture before starting the selection box, you could simply delay the selection: If two fingers are used in the gesture after that time has passed the selection box will be automatically canceled.
+
+```tsx
+const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+    onDragStart: (event) => {
+        setTimeout(() => {}, 250); // wait for 250ms for pinch gestures before starting drag-selection
+    },
+});
+```
+
+The same can be applied to other use cases, if you need to cancel the selection simply return `event.preventDefault()`.
+
+```tsx
+const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+    onDragStart: (event) => {
+        let shouldCancel = false;
+        setTimeout(() => {}, 200); // wait 200ms before checking if should cancel selection
+        /**
+         * check if should cancel
+         * ...
+         **/
+        shouldCancel = true;
+        if (shouldCancel) {
+            return event.preventDefault(); // cancel selection
+        }
+    },
+});
+```
 
 </details>
 
@@ -285,9 +362,41 @@ Work in progress...
 Drawing your own selection box
 </summary>
 
-<!-- Styled Components, Stitches, etc. -->
+> **Note**
+>
+> You will not have any of the accessibility features included by default.
 
-Work in progress...
+Start by creating your box component and pass in the provided `selectionBoxRef`, then apply the `selectionBox` to the styles for the pointer coordinates.
+
+```tsx
+export function App() {
+    const selectionContainerRef = React.useRef(null);
+    const { selectionBoxRef } = useSelectify(selectionContainerRef);
+
+    const MyCustomSelectionBoxOutlet = () => {
+        // custom logic...
+        return (
+            <div
+                ref={selectionBoxRef}
+                style={{
+                    ...selectionBox,
+                    boxSizing: "border-box",
+                    position: "absolute",
+                }}
+            />
+        );
+    };
+
+    return (
+        <div ref={selectionContainerRef} style={{ position: "relative" }}>
+            <div>I can be selected!</div>
+            <MyCustomSelectionBoxOutlet />
+        </div>
+    );
+}
+```
+
+> Make sure you add `position: absolute` and `border-box` for floating-ui calculations.
 
 </details>
 
@@ -304,35 +413,36 @@ Work in progress...
 
 ## Options
 
-| Prop                    | Type                                                   | Default          | Description                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| maxSelections           | number \| false                                        | -                | Maximum number of elements that can be selected. Will stop selecting after reaching that number and keep already selected elements.                     |
-| autoScroll              | boolean                                                | true             | Automatically try to scroll the window when the pointer approaches the viewport edge while dragging.                                                    |
-| autoScrollEdgeDistance  | number                                                 | 100              | Distance in px from the viewport's edges from which the box will try scrolling the window when the pointer approaches the viewport edge while dragging. |
-| autoScrollStep          | number                                                 | 40               | Auto scroll speed.                                                                                                                                      |
-| disableUnselection      | boolean                                                | false            | Will keep every item selected after selection. Can be cleared with clearSelection().                                                                    |
-| selectCriteria          | string \| undefined                                    | "\*"             | The specific CSS Selector criteria to match for selecting elements.                                                                                     |
-| onlySelectOnFullOverlap | boolean                                                | false            | Will only select the element if the full rect intersects.                                                                                               |
-| onlySelectOnDragEnd     | boolean                                                | false            | Will only select elements after user has stopped dragging or cursor has left the screen while dragging.                                                 |
-| selectionDelay          | number                                                 | 0                | Specify a delay in miliseconds before elements are selected, to prevent accidental selection.                                                           |
-| label                   | string                                                 | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
-| selectionTolerance      | number                                                 | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
-| activateOnMetaKey       | boolean                                                | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
-| activateOnKey           | string[]                                               | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
-| theme                   | "default" \| "outline"                                 | "default"        | Included theme options for the selection box appearance.                                                                                                |
-| hideOnScroll            | boolean                                                | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
-| disabled                | boolean                                                | false            | Disables the selection box interaction & dragging.                                                                                                      |
-| forceMount              | boolean                                                | false            | Forces the mounting of the selection box on initialization.                                                                                             |
-| onSelect                | (element: Element) => void                             | -                | Callback function when an element is selected.                                                                                                          |
-| onUnselect              | (unselectedElement: Element) => void                   | -                | Callback function when an element is unselected.                                                                                                        |
-| onDragStart             | (e: PointerEvent) => void                              | -                | Callback function when drag starts.                                                                                                                     |
-| onDragMove              | (e: PointerEvent, selectedElements: Element[]) => void | -                | Callback function when dragging.                                                                                                                        |
-| onDragEnd               | (e: PointerEvent, selectedElements: Element[]) => void | -                | Callback function when drag ends.                                                                                                                       |
-| onEscapeKeyDown         | (e: KeyboardEvent) => void                             | -                | Callback function when escape key is pressed.                                                                                                           |
+| Prop                    | Type                                                     | Default          | Description                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| maxSelections           | number \| false                                          | -                | Maximum number of elements that can be selected. Will stop selecting after reaching that number and keep already selected elements.                     |
+| autoScroll              | boolean                                                  | true             | Automatically try to scroll the window when the pointer approaches the viewport edge while dragging.                                                    |
+| autoScrollEdgeDistance  | number                                                   | 100              | Distance in px from the viewport's edges from which the box will try scrolling the window when the pointer approaches the viewport edge while dragging. |
+| autoScrollStep          | number                                                   | 40               | Auto scroll speed.                                                                                                                                      |
+| disableUnselection      | boolean                                                  | false            | Will keep every item selected after selection. Can be cleared with clearSelection().                                                                    |
+| selectCriteria          | string \| undefined                                      | "\*"             | The specific CSS Selector criteria to match for selecting elements.                                                                                     |
+| onlySelectOnFullOverlap | boolean                                                  | false            | Will only select the element if the full rect intersects.                                                                                               |
+| onlySelectOnDragEnd     | boolean                                                  | false            | Will only select elements after user has stopped dragging or cursor has left the screen while dragging.                                                 |
+| selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected, to prevent accidental selection.                                                           |
+| label                   | string                                                   | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
+| selectionTolerance      | number                                                   | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
+| activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
+| activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
+| theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
+| hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
+| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from the specified elements.                                                       |
+| disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
+| forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
+| onSelect                | (element: Element) => void                               | -                | Callback function when an element is selected.                                                                                                          |
+| onUnselect              | (unselectedElement: Element) => void                     | -                | Callback function when an element is unselected.                                                                                                        |
+| onDragStart             | (e: PointerEvent) => void                                | -                | Callback function when drag starts.                                                                                                                     |
+| onDragMove              | (e: PointerEvent, selectedElements: Element[]) => void   | -                | Callback function when dragging.                                                                                                                        |
+| onDragEnd               | (e?: PointerEvent, selectedElements?: Element[]) => void | -                | Callback function when drag ends.                                                                                                                       |
+| onEscapeKeyDown         | (e: KeyboardEvent) => void                               | -                | Callback function when escape key is pressed.                                                                                                           |
 
 ## Accessibility (optional)
 
-By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/ARIA/apg/) best practices. Though to ensure that drag interactions are as accessible as possible, we must consider the following aspects:
+By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html) best practices. Though to ensure that drag interactions are as accessible as possible, we must consider the following aspects:
 
 1. Add ARIA attributes: To indicate to assistive technology users that the elements are available for selection, we can use an aria-label to each selectable element. This label should be descriptive and informative, indicating either the purpose of selecting that element or how to select it for screen readers. Additionally, we can use the aria-selected attribute to indicate when elements are selected:
 
@@ -377,7 +487,7 @@ user-select: none;
     yarn
     ```
 
-4. Start the Storybook preview
+4. Start the Storybook preview for development
 
     ```sh
     yarn storybook
