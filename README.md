@@ -92,6 +92,7 @@ export default () => {
 
 <details>
 <summary>See every prop</summary>
+
 -   `SelectBoxOutlet`: The returned selection box component.
 -   `selectedElements`: A list of every element that has been selected through the hook.
 -   `isDragging`: Whether the user's pointer is dragging or not.
@@ -186,7 +187,7 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 
 ### Styling
 
-By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component. For Styled Components or Stitches see [how to render your own selection box](#more-usages).
+By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component. For Styled Components or Stitches see [how to render your own selection box](#other-use-cases).
 
 > **Note**
 >
