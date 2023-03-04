@@ -898,6 +898,7 @@ function useSelectify<T extends HTMLElement>(
         clearSelection,
         mutateSelections,
         cancelSelectionBox: cancelRectDraw,
+        selectionBoxRef: intersectBoxRef,
         options,
     };
 }
