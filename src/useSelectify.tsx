@@ -25,6 +25,7 @@ export type BoxBoundingPosition = {
 const NULL_OBJ: PositionPoint = Object.freeze({ x: null, y: null });
 
 const IS_SERVER = typeof window === "undefined";
+const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
 
 function throttle(timer: (frame: FrameRequestCallback) => number) {
     let queuedCallback: (() => void) | null;
@@ -39,8 +40,6 @@ function throttle(timer: (frame: FrameRequestCallback) => number) {
         queuedCallback = callback;
     };
 }
-
-const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
 
 /* -------------------------------------------------------------------------------------------------
  * Select Box Component
@@ -188,7 +187,7 @@ export interface UseSelectProps {
      *
      * @defaultValue "*"
      */
-    selectCriteria?: string | undefined;
+    selectCriteria?: string;
     /**
      * Will only select the element if the full rect intersects
      */
@@ -222,6 +221,10 @@ export interface UseSelectProps {
      * Only enables the selection box if the user was pressing a specified key while initiating the drag.
      */
     activateOnKey?: string[];
+    /**
+     * Won't enable the selection box if the user tries initiating the drag from the specified element.
+     */
+    exclusionZone?: Element | Element[] | null;
     hideOnScroll?: boolean;
     theme?: Theme | undefined;
     disabled?: boolean;
@@ -250,6 +253,7 @@ function useSelectify<T extends HTMLElement>(
         activateOnKey,
         onlySelectOnFullOverlap,
         onlySelectOnDragEnd,
+        exclusionZone,
         selectionDelay,
         label,
         theme,
@@ -381,9 +385,13 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getIntersectedElements = React.useCallback(
-        (intersectionBox: Element, elementsToIntersect: readonly Element[]) => {
-            const intersectionBoxRect = intersectionBox.getBoundingClientRect();
+        (intersectionBox: Element | DOMRect, elementsToIntersect: readonly Element[]) => {
+            const intersectionBoxRect =
+                intersectionBox instanceof DOMRect
+                    ? intersectionBox
+                    : intersectionBox.getBoundingClientRect();
             const intersectedElements: Element[] = [];
+
             for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
                 const itemRect = elementsToIntersect[i].getBoundingClientRect();
                 if (checkIntersection(intersectionBoxRect, itemRect)) {
@@ -701,6 +709,16 @@ function useSelectify<T extends HTMLElement>(
                     target.releasePointerCapture(event.pointerId);
                 }
 
+                const eventStartingPoint = { x: event.pageX, y: event.pageY };
+
+                if (exclusionZone) {
+                    const elements = getIntersectedElements(
+                        new DOMRect(eventStartingPoint.x, eventStartingPoint.y, 1, 1),
+                        [exclusionZone].flat()
+                    );
+                    if (elements.length > 0) return;
+                }
+
                 const callback = triggerOnDragStart(event);
                 callback?.();
 
@@ -709,7 +727,7 @@ function useSelectify<T extends HTMLElement>(
                     return;
                 }
 
-                setStartPoint({ x: event.pageX, y: event.pageY });
+                setStartPoint(eventStartingPoint);
                 setIsDragging(true);
 
                 parentNode.addEventListener("pointermove", handleDrawRectUpdate, false);
@@ -735,6 +753,8 @@ function useSelectify<T extends HTMLElement>(
             autoScroll,
             cancelRectDraw,
             disabled,
+            exclusionZone,
+            getIntersectedElements,
             handleDrawRectUpdate,
             handleEscapeKeyCancel,
             hideOnScroll,
@@ -809,6 +829,7 @@ function useSelectify<T extends HTMLElement>(
         }
 
         const revert = cancelBrowserTouchActionClaim();
+        if (disabled) revert?.();
 
         return () => {
             revert?.();
