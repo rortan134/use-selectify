@@ -233,7 +233,7 @@ export interface UseSelectProps {
     onUnselect?(unselectedElement: Element): void;
     onDragStart?(e: PointerEvent): void | (() => void);
     onDragMove?(e: PointerEvent, selectedElements: Element[]): void;
-    onDragEnd?(e: PointerEvent, selectedElements: Element[]): void;
+    onDragEnd?(e?: PointerEvent, selectedElements?: Element[]): void;
     onEscapeKeyDown?(e: KeyboardEvent): void;
 }
 
@@ -635,7 +635,8 @@ function useSelectify<T extends HTMLElement>(
         setStartPoint(NULL_OBJ);
         setEndPoint(NULL_OBJ);
         setIsDragging(false);
-    }, [handleDrawRectUpdate, ref]);
+        triggerOnDragEnd();
+    }, [handleDrawRectUpdate, ref, triggerOnDragEnd]);
 
     const handleEscapeKeyCancel = React.useCallback(
         (event: KeyboardEvent) => {
@@ -846,24 +847,22 @@ function useSelectify<T extends HTMLElement>(
     }, [cancelRectDraw, handleEscapeKeyCancel, ownerDocument]);
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
-        if (process.env.NODE_ENV === "development") {
-            if (ref.current) {
-                // In development we check that the outlet is an actual children of the ref container
-                if (
-                    Array.isArray(ref.current.children) &&
-                    ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)
-                ) {
-                    console.warn(`<SelectBoxOutlet> should be a direct children of your container ref <${ref.current.tagName}>.
+        if (process.env.NODE_ENV === "development" && ref.current) {
+            // In development we check that the outlet is an actual children of the ref container
+            if (
+                Array.isArray(ref.current.children) &&
+                ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)
+            ) {
+                console.warn(`<SelectBoxOutlet> should be a direct children of your container ref <${ref.current.tagName}>.
                     Try moving it inside of the selection container.
                     `);
-                }
+            }
 
-                if (ref.current.scrollWidth > ref.current.clientWidth && !autoScroll) {
-                    console.warn(
-                        `use-selectify: <${ref.current.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
+            if (ref.current.scrollWidth > ref.current.clientWidth && !autoScroll) {
+                console.warn(
+                    `use-selectify: <${ref.current.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
                         Consider enabling autoScroll.`
-                    );
-                }
+                );
             }
         }
 
