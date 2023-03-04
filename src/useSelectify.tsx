@@ -27,7 +27,8 @@ const NULL_OBJ: PositionPoint = Object.freeze({ x: null, y: null });
 const IS_SERVER = typeof window === "undefined";
 const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
 
-function throttle(timer: (frame: FrameRequestCallback) => number) {
+function throttle(timer?: (frame: FrameRequestCallback) => number) {
+    if (!timer) return;
     let queuedCallback: (() => void) | null;
     return (callback: () => void) => {
         if (!queuedCallback) {
@@ -579,7 +580,7 @@ function useSelectify<T extends HTMLElement>(
     ]);
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
-    const throttledRequestAnimationFrame = useCallbackRef(throttle(window.requestAnimationFrame));
+    const throttledRequestAnimationFrame = useCallbackRef(throttle(window?.requestAnimationFrame));
     const isMultitouch = eventsCacheRef.current.length >= 2;
 
     const handleDrawRectUpdate = React.useCallback(
