@@ -1,5 +1,3 @@
-import "./story.css";
-
 import { ComponentMeta, ComponentStory } from "@storybook/react";
 import * as React from "react";
 
@@ -8,7 +6,7 @@ import SelectedCheckIcon from "./assets/check.svg";
 
 const Template = (args: UseSelectProps) => {
     const containerRef = React.useRef(null);
-
+    const exclusionZoneRef = React.useRef(null);
     const {
         SelectBoxOutlet,
         clearSelection,
@@ -18,21 +16,20 @@ const Template = (args: UseSelectProps) => {
         mutateSelections,
     } = useSelectify(containerRef, {
         ...args,
+        exclusionZone: exclusionZoneRef.current,
     });
 
-    function handleIndividualSelect(elementToSelect: HTMLElement | null | undefined) {
+    function toggleItemSelection(elementToSelect: HTMLElement | null | undefined) {
         if (!elementToSelect) return;
 
         // check if it isn't alredy selected
         if (!selectedElements.includes(elementToSelect)) {
             mutateSelections((prevSelections) => [...prevSelections, elementToSelect]);
-            console.log("selected");
         } else {
             // unselect
             mutateSelections((prevSelections) =>
-                prevSelections.filter((element) => element === elementToSelect)
+                prevSelections.filter((element) => element !== elementToSelect)
             );
-            console.log("Unselected");
         }
     }
 
@@ -54,13 +51,13 @@ const Template = (args: UseSelectProps) => {
                     <span>Code</span>
                 </header>
 
-                <div className="table-list">
+                <div className="table-list" ref={exclusionZoneRef}>
                     {[...Array(8)].map((_, i) => (
                         <div key={i} className="table-item">
                             <button
                                 className="table-item-icon"
                                 onClick={(e) =>
-                                    handleIndividualSelect(
+                                    toggleItemSelection(
                                         e.currentTarget.parentElement // here we're getting the .table-item element to select
                                     )
                                 }
@@ -83,7 +80,6 @@ const Template = (args: UseSelectProps) => {
 export const Basic = Template.bind({}) as ComponentStory<any>;
 Basic.args = {
     selectCriteria: `.table-item`,
-    autoScroll: false,
     onSelect: (el: Element) => {
         el.classList.add("table-item-active");
     },
@@ -137,20 +133,8 @@ OnMetaKeyOnly.args = {
     },
 };
 
-export const AutoScroll = Template.bind({}) as ComponentStory<any>;
-AutoScroll.args = {
-    selectCriteria: `.table-item`,
-    autoScroll: true,
-    onSelect: (el: Element) => {
-        el.classList.add("table-item-active");
-    },
-    onUnselect: (el: Element) => {
-        el.classList.remove("table-item-active");
-    },
-};
-
-export const onlySelectOnDragEnd = Template.bind({}) as ComponentStory<any>;
-onlySelectOnDragEnd.args = {
+export const OnlySelectOnDragEnd = Template.bind({}) as ComponentStory<any>;
+OnlySelectOnDragEnd.args = {
     selectCriteria: `.table-item`,
     onlySelectOnDragEnd: true,
     onSelect: (el: Element) => {
