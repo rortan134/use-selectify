@@ -92,6 +92,7 @@ export default () => {
 
 <details>
 <summary>See every prop</summary>
+
 -   `SelectBoxOutlet`: The returned selection box component.
 -   `selectedElements`: A list of every element that has been selected through the hook.
 -   `isDragging`: Whether the user's pointer is dragging or not.
