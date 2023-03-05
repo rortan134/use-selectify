@@ -404,51 +404,46 @@ function useSelectify<T extends HTMLElement>(
         [checkIntersection]
     );
 
-    // ToDo: refactor this
     const handleAutomaticWindowScroll = React.useCallback(
         (event: PointerEvent) => {
-            if (IS_SERVER) return;
-
             const viewportX = event.clientX;
             const viewportY = event.clientY;
             const viewportWidth = document.documentElement.clientWidth;
             const viewportHeight = document.documentElement.clientHeight;
 
-            const edgeTop = autoScrollEdgeDistance;
-            const edgeLeft = autoScrollEdgeDistance;
             const edgeBottom = viewportHeight - autoScrollEdgeDistance;
             const edgeRight = viewportWidth - autoScrollEdgeDistance;
-            const isInLeftEdge = viewportX < edgeLeft;
+            const isInLeftEdge = viewportX < autoScrollEdgeDistance;
             const isInRightEdge = viewportX > edgeRight;
-            const isInTopEdge = viewportY < edgeTop;
+            const isInTopEdge = viewportY < autoScrollEdgeDistance;
             const isInBottomEdge = viewportY > edgeBottom;
 
-            // stop if the mouse is not in the viewport edge
+            // Stop if the pointer isn't at the edge
             if (!(isInLeftEdge || isInRightEdge || isInTopEdge || isInBottomEdge)) {
                 window.clearTimeout(scrollTimerRef.current);
                 return;
             }
 
-            const documentWidth = Math.max(
-                document.body.scrollWidth,
-                document.body.offsetWidth,
-                document.body.clientWidth,
-                document.documentElement.scrollWidth,
-                document.documentElement.offsetWidth,
-                document.documentElement.clientWidth
-            );
-            const documentHeight = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.body.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight,
-                document.documentElement.clientHeight
-            );
-            const maxScrollX = documentWidth - viewportWidth;
-            const maxScrollY = documentHeight - viewportHeight;
-
-            const adjustWindowScroll = () => {
+            function adjustWindowScroll() {
+                window.clearTimeout(scrollTimerRef.current);
+                const documentWidth = Math.max(
+                    document.body.scrollWidth,
+                    document.body.offsetWidth,
+                    document.body.clientWidth,
+                    document.documentElement.scrollWidth,
+                    document.documentElement.offsetWidth,
+                    document.documentElement.clientWidth
+                );
+                const documentHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.body.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight,
+                    document.documentElement.clientHeight
+                );
+                const maxScrollX = documentWidth - viewportWidth;
+                const maxScrollY = documentHeight - viewportHeight;
                 const currentScrollX = window.pageXOffset;
                 const currentScrollY = window.pageYOffset;
                 const canScrollUp = currentScrollY > 0;
@@ -459,15 +454,18 @@ function useSelectify<T extends HTMLElement>(
                 let nextScrollY = currentScrollY;
                 const maxStep = autoScrollStep;
 
+                // Check left and right
                 if (isInLeftEdge && canScrollLeft) {
-                    const intensity = (edgeLeft - viewportX) / autoScrollEdgeDistance;
+                    const intensity = (autoScrollEdgeDistance - viewportX) / autoScrollEdgeDistance;
                     nextScrollX = nextScrollX - maxStep * intensity;
                 } else if (isInRightEdge && canScrollRight) {
                     const intensity = (viewportX - edgeRight) / autoScrollEdgeDistance;
                     nextScrollX = nextScrollX + maxStep * intensity;
                 }
+
+                // Check up and down
                 if (isInTopEdge && canScrollUp) {
-                    const intensity = (edgeTop - viewportY) / autoScrollEdgeDistance;
+                    const intensity = (autoScrollEdgeDistance - viewportY) / autoScrollEdgeDistance;
                     nextScrollY = nextScrollY - maxStep * intensity;
                 } else if (isInBottomEdge && canScrollDown) {
                     const intensity = (viewportY - edgeBottom) / autoScrollEdgeDistance;
@@ -480,19 +478,10 @@ function useSelectify<T extends HTMLElement>(
 
                 if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
                     window.scrollTo(nextScrollX, nextScrollY);
-                    return true;
-                } else {
-                    return false;
+                    scrollTimerRef.current = window.setTimeout(adjustWindowScroll, 30);
                 }
-            };
-
-            (function checkForWindowScroll() {
-                clearTimeout(scrollTimerRef.current);
-
-                if (adjustWindowScroll()) {
-                    scrollTimerRef.current = window.setTimeout(checkForWindowScroll, 30);
-                }
-            })();
+            }
+            adjustWindowScroll();
         },
         [autoScrollEdgeDistance, autoScrollStep]
     );
