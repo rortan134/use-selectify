@@ -569,7 +569,9 @@ function useSelectify<T extends HTMLElement>(
     ]);
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
-    const throttledRequestAnimationFrame = useCallbackRef(throttle(window?.requestAnimationFrame));
+    const throttledRequestAnimationFrame = useCallbackRef(
+        throttle(globalThis?.window?.requestAnimationFrame)
+    );
     const isMultitouch = eventsCacheRef.current.length >= 2;
 
     const handleDrawRectUpdate = React.useCallback(
@@ -794,7 +796,7 @@ function useSelectify<T extends HTMLElement>(
     useEventListener(ownerDocument, "blur", cancelRectDraw, false);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
-    useEventListener(window, "resize", resetEventsCache, false);
+    useEventListener(globalThis?.window, "resize", resetEventsCache, false);
 
     useIsomorphicLayoutEffect(() => {
         // Prevent browser from trying to claim the pointermove event for panning on mobile
