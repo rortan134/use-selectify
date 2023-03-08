@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "useDefineForClassFields": true,
+        "target": "ES2017",
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "allowJs": false,
+        "useDefineForClassFields": true,
+        "allowJs": true,
+        "checkJs": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
@@ -16,6 +17,8 @@
         "declaration": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
+        "incremental": true,
+        // "noUncheckedIndexedAccess": true,
         "declarationMap": true,
         "strictNullChecks": true,
         "baseUrl": ".",
