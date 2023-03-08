@@ -32,6 +32,7 @@ const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutE
  * -----------------------------------------------------------------------------------------------*/
 
 const SELECT_BOX_NAME = "SelectBoxOutlet";
+const SELECT_LABEL_NAME = "SelectBoxLabel";
 const DEFAULT_SCREEN_READER_LABEL = "Drag Selection";
 
 export type Theme = "default" | "outline";
@@ -59,6 +60,14 @@ const srOnlyStyles = {
     whiteSpace: "nowrap",
     borderWidth: "0",
 } as const;
+
+const Label = React.memo(({ id, children }: { id: string; children: React.ReactNode }) => (
+    <span id={id} aria-live="assertive" style={srOnlyStyles}>
+        {children}
+    </span>
+));
+
+Label.displayName = SELECT_LABEL_NAME;
 
 const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
     (props: SelectifyComponentProps, forwardedRef) => {
@@ -111,8 +120,8 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 ref={forwardedRef}
                 id={SELECT_BOX_IDENTIFIER}
                 role="region"
-                aria-labelledby={boxId}
                 tabIndex={-1}
+                aria-labelledby={boxId}
                 className={props.className || selectionBoxTheme}
                 style={{
                     // Ensure border-box for floating-ui calculations
@@ -124,15 +133,23 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                     ...props.style,
                 }}
             >
-                <span id={boxId} aria-live="assertive" style={srOnlyStyles}>
-                    {liveText}
-                </span>
+                <Label id={boxId}>{liveText}</Label>
             </div>
         ) : null;
     }
 );
 
 SelectBox.displayName = SELECT_BOX_NAME;
+
+function promiseWrapper(promise: { default: React.ComponentType<any> }): Promise<{
+    default: React.ComponentType<any>;
+}> {
+    return new Promise((resolve) => {
+        resolve(promise);
+    });
+}
+
+const LazySelectBox = React.lazy(() => promiseWrapper({ default: SelectBox }));
 
 /* -------------------------------------------------------------------------------------------------
  * Selectify Hook
@@ -227,7 +244,8 @@ export interface UseSelectProps {
      */
     exclusionZone?: Element | Element[] | null;
     hideOnScroll?: boolean;
-    theme?: Theme | undefined;
+    theme?: Theme;
+    lazyLoad?: boolean;
     disabled?: boolean;
     forceMount?: boolean;
     onSelect?(element: Element): void;
@@ -257,6 +275,7 @@ function useSelectify<T extends HTMLElement>(
         exclusionZone,
         selectionDelay,
         label,
+        lazyLoad,
         theme,
         selectionTolerance = 0,
         onSelect = () => {},
@@ -860,7 +879,22 @@ function useSelectify<T extends HTMLElement>(
             return null;
         }
 
-        return (
+        return lazyLoad ? (
+            <React.Suspense>
+                <LazySelectBox
+                    {...props}
+                    ref={intersectBoxRef}
+                    parentRef={ref}
+                    selectionBox={selectionBox}
+                    isDragging={isDragging}
+                    overlappedElementsCount={selectedElements.length + 1}
+                    theme={theme}
+                    label={label}
+                    forceMount={Boolean(forceMount)}
+                    suppressHydrationWarning
+                />
+            </React.Suspense>
+        ) : (
             <SelectBox
                 {...props}
                 ref={intersectBoxRef}
