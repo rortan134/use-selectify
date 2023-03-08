@@ -35,7 +35,7 @@ Drag interactions are one of the most challenging aspects of the web. Having ful
 
 Recognizing this need, `use-selectify` was created aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
 
-<!-- Demo & Examples: [use-selectify.vercel.app](https://use-selectify.vercel.app/) -->
+<!-- Demo & Examples: [use-selectify.js.org](https://use-selectify.js.org/) -->
 
 ## Features
 
@@ -52,6 +52,8 @@ Recognizing this need, `use-selectify` was created aiming to address those issue
 ✅ Works on every device
 
 ✅ SSR support
+
+✅ TypeScript-First
 
 ## Installation
 
@@ -278,7 +280,7 @@ If you wish to couple the internal hook selections state with your own, you can 
 ```tsx
 // ...
 
-const containerRef = React.useRef(null);
+const selectionContainerRef = React.useRef(null);
 const { SelectBoxOutlet, selectedElements, mutateSelections } = useSelectify(selectionContainerRef);
 
 const selectElement = (elementToSelect) => {
@@ -290,6 +292,15 @@ const unselectElement = (elementToUnselect) => {
         prevSelections.filter((element) => element !== elementToSelect)
     );
 };
+```
+
+> Tip:
+> If you think the user won't initially be using drag-selection, consider enabling [lazy-load](https://beta.reactjs.org/reference/react/lazy):
+
+```tsx
+const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+    lazyLoad: true,
+});
 ```
 
 ### Other use-cases
@@ -431,7 +442,8 @@ Work in progress...
 | activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
-| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                       |
+| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
+| lazyLoad           | boolean                                     | false                | Defers loading the selection box.                                                |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
 | onSelect                | (element: Element) => void                               | -                | Callback function when an element is selected.                                                                                                          |
