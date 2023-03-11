@@ -191,7 +191,7 @@ export interface UseSelectProps {
     autoScrollEdgeDistance?: number;
     /**
      * Auto scroll speed.
-     * @defaultValue 40
+     * @defaultValue 30
      */
     autoScrollStep?: number;
     /**
@@ -265,7 +265,7 @@ function useSelectify<T extends HTMLElement>(
         maxSelections = false,
         autoScroll = true,
         autoScrollEdgeDistance = 100,
-        autoScrollStep = 40,
+        autoScrollStep = 30,
         hideOnScroll,
         disableUnselection,
         activateOnMetaKey,
@@ -296,7 +296,6 @@ function useSelectify<T extends HTMLElement>(
     const lastIntersectedElements = React.useRef<Element[]>([]);
     const intersectBoxRef = React.useRef<HTMLDivElement>(null);
     const selectionTimerRef = React.useRef(0);
-    const scrollTimerRef = React.useRef(0);
     const intersectionDifference = React.useRef<Element[]>([]);
     const hasSelected = selectedElements.length > 0;
     const shouldDelaySelect = selectionDelay !== undefined && selectionDelay > 0;
@@ -405,11 +404,7 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getIntersectedElements = React.useCallback(
-        (intersectionBox: Element | DOMRect, elementsToIntersect: readonly Element[]) => {
-            const intersectionBoxRect =
-                intersectionBox instanceof DOMRect
-                    ? intersectionBox
-                    : intersectionBox.getBoundingClientRect();
+        (intersectionBoxRect: DOMRect, elementsToIntersect: readonly Element[]) => {
             const intersectedElements: Element[] = [];
 
             for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
@@ -421,88 +416,6 @@ function useSelectify<T extends HTMLElement>(
             return intersectedElements;
         },
         [checkIntersection]
-    );
-
-    const handleAutomaticWindowScroll = React.useCallback(
-        (event: PointerEvent) => {
-            const viewportX = event.clientX;
-            const viewportY = event.clientY;
-            const viewportWidth = document.documentElement.clientWidth;
-            const viewportHeight = document.documentElement.clientHeight;
-
-            const edgeBottom = viewportHeight - autoScrollEdgeDistance;
-            const edgeRight = viewportWidth - autoScrollEdgeDistance;
-            const isInLeftEdge = viewportX < autoScrollEdgeDistance;
-            const isInRightEdge = viewportX > edgeRight;
-            const isInTopEdge = viewportY < autoScrollEdgeDistance;
-            const isInBottomEdge = viewportY > edgeBottom;
-
-            // Stop if the pointer isn't at the edge
-            if (!(isInLeftEdge || isInRightEdge || isInTopEdge || isInBottomEdge)) {
-                window.clearTimeout(scrollTimerRef.current);
-                return;
-            }
-
-            function adjustWindowScroll() {
-                window.clearTimeout(scrollTimerRef.current);
-                const documentWidth = Math.max(
-                    document.body.scrollWidth,
-                    document.body.offsetWidth,
-                    document.body.clientWidth,
-                    document.documentElement.scrollWidth,
-                    document.documentElement.offsetWidth,
-                    document.documentElement.clientWidth
-                );
-                const documentHeight = Math.max(
-                    document.body.scrollHeight,
-                    document.body.offsetHeight,
-                    document.body.clientHeight,
-                    document.documentElement.scrollHeight,
-                    document.documentElement.offsetHeight,
-                    document.documentElement.clientHeight
-                );
-                const maxScrollX = documentWidth - viewportWidth;
-                const maxScrollY = documentHeight - viewportHeight;
-                const currentScrollX = window.pageXOffset;
-                const currentScrollY = window.pageYOffset;
-                const canScrollUp = currentScrollY > 0;
-                const canScrollDown = currentScrollY < maxScrollY;
-                const canScrollLeft = currentScrollX > 0;
-                const canScrollRight = currentScrollX < maxScrollX;
-                let nextScrollX = currentScrollX;
-                let nextScrollY = currentScrollY;
-                const maxStep = autoScrollStep;
-
-                // Check left and right
-                if (isInLeftEdge && canScrollLeft) {
-                    const intensity = (autoScrollEdgeDistance - viewportX) / autoScrollEdgeDistance;
-                    nextScrollX = nextScrollX - maxStep * intensity;
-                } else if (isInRightEdge && canScrollRight) {
-                    const intensity = (viewportX - edgeRight) / autoScrollEdgeDistance;
-                    nextScrollX = nextScrollX + maxStep * intensity;
-                }
-
-                // Check up and down
-                if (isInTopEdge && canScrollUp) {
-                    const intensity = (autoScrollEdgeDistance - viewportY) / autoScrollEdgeDistance;
-                    nextScrollY = nextScrollY - maxStep * intensity;
-                } else if (isInBottomEdge && canScrollDown) {
-                    const intensity = (viewportY - edgeBottom) / autoScrollEdgeDistance;
-                    nextScrollY = nextScrollY + maxStep * intensity;
-                }
-
-                // Filter invalid maximums
-                nextScrollX = Math.max(0, Math.min(maxScrollX, nextScrollX));
-                nextScrollY = Math.max(0, Math.min(maxScrollY, nextScrollY));
-
-                if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
-                    window.scrollTo(nextScrollX, nextScrollY);
-                    scrollTimerRef.current = window.setTimeout(adjustWindowScroll, 30);
-                }
-            }
-            adjustWindowScroll();
-        },
-        [autoScrollEdgeDistance, autoScrollStep]
     );
 
     const canSelectRef = React.useRef(false);
@@ -566,7 +479,10 @@ function useSelectify<T extends HTMLElement>(
         }
 
         // Check intersection against every selectable element
-        const intersectedElements = getIntersectedElements(selectionBoxRef, matchingElements);
+        const intersectedElements = getIntersectedElements(
+            selectionBoxRef.getBoundingClientRect(),
+            matchingElements
+        );
         const difference = getIntersectionsDifference(intersectedElements);
 
         // Check if there's something to be selected and if so, select it
@@ -586,6 +502,103 @@ function useSelectify<T extends HTMLElement>(
         selectCriteria,
         shouldDelaySelect,
     ]);
+
+    const scrollTimerRef = React.useRef(0);
+
+    const handleAutomaticWindowScroll = React.useCallback(
+        (event: PointerEvent, { cancelLast }: { cancelLast?: boolean } = {}) => {
+            if (cancelLast) {
+                window.clearTimeout(scrollTimerRef.current);
+            }
+
+            const viewportX = event.clientX;
+            const viewportY = event.clientY;
+            const viewportWidth = document.documentElement.clientWidth;
+            const viewportHeight = document.documentElement.clientHeight;
+
+            const edgeBottom = viewportHeight - autoScrollEdgeDistance;
+            const edgeRight = viewportWidth - autoScrollEdgeDistance;
+            const isInLeftEdge = viewportX < autoScrollEdgeDistance;
+            const isInRightEdge = viewportX > edgeRight;
+            const isInTopEdge = viewportY < autoScrollEdgeDistance;
+            const isInBottomEdge = viewportY > edgeBottom;
+
+            // Stop if the pointer isn't at the edge
+            if (!(isInLeftEdge || isInRightEdge || isInTopEdge || isInBottomEdge)) {
+                window.clearTimeout(scrollTimerRef.current);
+                return;
+            }
+
+            const documentWidth = Math.max(
+                document.body.scrollWidth,
+                document.body.offsetWidth,
+                document.body.clientWidth,
+                document.documentElement.scrollWidth,
+                document.documentElement.offsetWidth,
+                document.documentElement.clientWidth
+            );
+            const documentHeight = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight,
+                document.documentElement.clientHeight
+            );
+            const maxScrollX = documentWidth - viewportWidth;
+            const maxScrollY = documentHeight - viewportHeight;
+            const currentScrollX = window.pageXOffset;
+            const currentScrollY = window.pageYOffset;
+            const canScrollUp = currentScrollY > 0;
+            const canScrollDown = currentScrollY < maxScrollY;
+            const canScrollLeft = currentScrollX > 0;
+            const canScrollRight = currentScrollX < maxScrollX;
+            let nextScrollX = currentScrollX;
+            let nextScrollY = currentScrollY;
+
+            // Check left and right
+            if (isInLeftEdge && canScrollLeft) {
+                const intensity = (autoScrollEdgeDistance - viewportX) / autoScrollEdgeDistance;
+                nextScrollX = nextScrollX - autoScrollStep * intensity;
+            } else if (isInRightEdge && canScrollRight) {
+                const intensity = (viewportX - edgeRight) / autoScrollEdgeDistance;
+                nextScrollX = nextScrollX + autoScrollStep * intensity;
+            }
+
+            // Check up and down
+            if (isInTopEdge && canScrollUp) {
+                const intensity = (autoScrollEdgeDistance - viewportY) / autoScrollEdgeDistance;
+                nextScrollY = nextScrollY - autoScrollStep * intensity;
+            } else if (isInBottomEdge && canScrollDown) {
+                const intensity = (viewportY - edgeBottom) / autoScrollEdgeDistance;
+                nextScrollY = nextScrollY + autoScrollStep * intensity;
+            }
+
+            // Filter invalid maximums
+            nextScrollX = Math.max(0, Math.min(maxScrollX, nextScrollX));
+            nextScrollY = Math.max(0, Math.min(maxScrollY, nextScrollY));
+
+            // Adjust window scroll
+            if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
+                window.scrollTo(nextScrollX, nextScrollY);
+                if (!cancelLast) {
+                    // Handle static-pointer selection
+                    setEndPoint({
+                        x: event.clientX + nextScrollX,
+                        y: event.clientY + nextScrollY,
+                    });
+                    checkSelectionBoxIntersect();
+                }
+                // Schedule static-pointer auto-scroll with current event
+                // Can be cancelled
+                scrollTimerRef.current = window.setTimeout(
+                    () => handleAutomaticWindowScroll(event),
+                    30
+                );
+            }
+        },
+        [autoScrollEdgeDistance, autoScrollStep, checkSelectionBoxIntersect]
+    );
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
     const throttledRequestAnimationFrame = useCallbackRef(
@@ -619,7 +632,7 @@ function useSelectify<T extends HTMLElement>(
             }
 
             if (autoScroll) {
-                handleAutomaticWindowScroll(event);
+                handleAutomaticWindowScroll(event, { cancelLast: true });
             }
 
             triggerOnDragMove(event, lastIntersectedElements.current);
@@ -641,6 +654,7 @@ function useSelectify<T extends HTMLElement>(
         if (!parentNode) return;
         parentNode.removeEventListener("pointermove", handleDrawRectUpdate, false);
         window.removeEventListener("scroll", cancelRectDraw);
+        window.clearTimeout(scrollTimerRef.current);
 
         // Reset defaults
         setStartPoint(NULL_OBJ);
