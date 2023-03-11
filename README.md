@@ -45,9 +45,9 @@ Recognizing this need, `use-selectify` was created aiming to address those issue
 
 ✅ Accessible by default
 
-✅ Fine-grained control
+✅ Fine-grained control with multiple approaches
 
-✅ Simple to style
+✅ Simple & extensible styling
 
 ✅ Works on every device
 
@@ -430,20 +430,20 @@ Work in progress...
 | maxSelections           | number \| false                                          | -                | Maximum number of elements that can be selected. Will stop selecting after reaching that number and keep already selected elements.                     |
 | autoScroll              | boolean                                                  | true             | Automatically try to scroll the window when the pointer approaches the viewport edge while dragging.                                                    |
 | autoScrollEdgeDistance  | number                                                   | 100              | Distance in px from the viewport's edges from which the box will try scrolling the window when the pointer approaches the viewport edge while dragging. |
-| autoScrollStep          | number                                                   | 40               | Auto scroll speed.                                                                                                                                      |
+| autoScrollStep          | number                                                   | 30               | Auto scroll speed.                                                                                                                                      |
 | disableUnselection      | boolean                                                  | false            | Will keep every item selected after selection. Can be cleared with clearSelection().                                                                    |
 | selectCriteria          | string \| undefined                                      | "\*"             | The specific CSS Selector criteria to match for selecting elements.                                                                                     |
 | onlySelectOnFullOverlap | boolean                                                  | false            | Will only select the element if the full rect intersects.                                                                                               |
 | onlySelectOnDragEnd     | boolean                                                  | false            | Will only select elements after user has stopped dragging or cursor has left the screen while dragging.                                                 |
-| selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected, to prevent accidental selection.                                                           |
+| selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected to prevent accidental selection.                                                           |
 | label                   | string                                                   | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
 | selectionTolerance      | number                                                   | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
 | activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
 | activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
-| hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling.                                                                                     |
+| hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                                                     |
 | exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
-| lazyLoad           | boolean                                     | false                | Defers loading the selection box.                                                |
+| lazyLoad                | boolean                                                  | false            | Defers loading the selection box.                                                                                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
 | onSelect                | (element: Element) => void                               | -                | Callback function when an element is selected.                                                                                                          |
