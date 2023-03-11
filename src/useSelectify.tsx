@@ -109,7 +109,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
 
         // copy z-index from content to wrapper
         const [contentZIndex, setContentZIndex] = React.useState<string>();
-        React.useLayoutEffect(() => {
+        useIsomorphicLayoutEffect(() => {
             if (parentRef.current)
                 setContentZIndex(window.getComputedStyle(parentRef.current).zIndex);
         }, [parentRef]);
@@ -879,34 +879,25 @@ function useSelectify<T extends HTMLElement>(
             return null;
         }
 
+        const selectBoxProps = {
+            ...props,
+            ref: intersectBoxRef,
+            parentRef: ref,
+            selectionBox: selectionBox,
+            isDragging: isDragging,
+            overlappedElementsCount: selectedElements.length + 1,
+            theme: theme,
+            label: label,
+            forceMount: Boolean(forceMount),
+            suppressHydrationWarning: true,
+        };
+
         return lazyLoad ? (
             <React.Suspense>
-                <LazySelectBox
-                    {...props}
-                    ref={intersectBoxRef}
-                    parentRef={ref}
-                    selectionBox={selectionBox}
-                    isDragging={isDragging}
-                    overlappedElementsCount={selectedElements.length + 1}
-                    theme={theme}
-                    label={label}
-                    forceMount={Boolean(forceMount)}
-                    suppressHydrationWarning
-                />
+                <LazySelectBox {...selectBoxProps} />
             </React.Suspense>
         ) : (
-            <SelectBox
-                {...props}
-                ref={intersectBoxRef}
-                parentRef={ref}
-                selectionBox={selectionBox}
-                isDragging={isDragging}
-                overlappedElementsCount={selectedElements.length + 1}
-                theme={theme}
-                label={label}
-                forceMount={Boolean(forceMount)}
-                suppressHydrationWarning
-            />
+            <SelectBox {...selectBoxProps} />
         );
     });
     SelectBoxOutlet.displayName = SELECT_BOX_NAME;
