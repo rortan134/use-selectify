@@ -1,108 +1,112 @@
 {
-  "name": "use-selectify",
-  "description": "The ultimate drag-to-select solution for React.",
-  "version": "0.3.1",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rortan134/use-selectify"
-  },
-  "keywords": [
-    "selection",
-    "drag selection",
-    "selection box",
-    "drag to select",
-    "mouse",
-    "touch",
-    "react",
-    "react hook"
-  ],
-  "author": "rortan",
-  "bugs": {
-    "url": "https://github.com/rortan134/use-selectify/issues"
-  },
-  "homepage": "https://github.com/rortan134/use-selectify#readme",
-  "license": "MIT",
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/use-selectify.umd.js",
-  "module": "./dist/use-selectify.es.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
-    "lint:fix": "eslint --fix src/**/*.{jsx,ts,tsx}",
-    "format": "prettier --write src//**/*.{ts,tsx,css} --config ./.prettierrc",
-    "clean": "rm -rf dist",
-    "prepare": "husky install",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
-  },
-  "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.21.0",
-    "@storybook/addon-actions": "^6.5.16",
-    "@storybook/addon-essentials": "^6.5.16",
-    "@storybook/addon-interactions": "^6.5.16",
-    "@storybook/addon-links": "^6.5.16",
-    "@storybook/builder-vite": "^0.4.2",
-    "@storybook/react": "^6.5.16",
-    "@storybook/testing-library": "^0.0.13",
-    "@types/node": "^18.15.0",
-    "@types/react": "^18.0.27",
-    "@types/react-dom": "^18.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.54.1",
-    "@typescript-eslint/parser": "^5.54.1",
-    "@vitejs/plugin-react": "^3.1.0",
-    "@vitejs/plugin-react-swc": "^3.2.0",
-    "autoprefixer": "^10.4.14",
-    "babel-loader": "^9.1.2",
-    "eslint": "^8.36.0",
-    "eslint-config-prettier": "^8.7.0",
-    "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-jsx-a11y": "^6.5.1",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-react": "^7.32.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-simple-import-sort": "^10.0.0",
-    "eslint-plugin-storybook": "^0.6.11",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.2.0",
-    "postcss": "^8.4.21",
-    "postcss-loader": "^7.0.2",
-    "prettier": "^2.8.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-hooks": "^1.0.1",
-    "typescript": "^4.9.3",
-    "vite": "^4.1.4",
-    "vite-plugin-dts": "^2.1.0",
-    "vite-plugin-linter": "^2.0.2",
-    "vite-tsconfig-paths": "^4.0.5"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/use-selectify.es.js",
-      "require": "./dist/use-selectify.umd.js"
+    "name": "use-selectify",
+    "description": "The ultimate drag-to-select solution for React.",
+    "version": "0.3.1",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rortan134/use-selectify"
     },
-    "./dist/style.css": "./dist/style.css"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
+    "keywords": [
+        "selection",
+        "drag selection",
+        "selection box",
+        "drag to select",
+        "mouse",
+        "touch",
+        "react",
+        "react hook"
+    ],
+    "author": "rortan",
+    "bugs": {
+        "url": "https://github.com/rortan134/use-selectify/issues"
+    },
+    "homepage": "https://github.com/rortan134/use-selectify#readme",
+    "license": "MIT",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "main": "./dist/use-selectify.umd.js",
+    "module": "./dist/use-selectify.es.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
+        "lint:fix": "eslint --fix src/**/*.{jsx,ts,tsx}",
+        "format": "prettier --write src//**/*.{ts,tsx,css} --config ./.prettierrc",
+        "clean": "rm -rf dist",
+        "preversion": "yarn clean && yarn lint:fix",
+        "version": "yarn build",
+        "prepare": "husky install",
+        "storybook": "start-storybook -p 6006",
+        "build-storybook": "build-storybook"
+    },
+    "peerDependencies": {
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.21.0",
+        "@storybook/addon-actions": "^6.5.16",
+        "@storybook/addon-essentials": "^6.5.16",
+        "@storybook/addon-interactions": "^6.5.16",
+        "@storybook/addon-links": "^6.5.16",
+        "@storybook/builder-vite": "^0.4.2",
+        "@storybook/react": "^6.5.16",
+        "@storybook/testing-library": "^0.0.13",
+        "@types/node": "^18.15.0",
+        "@types/react": "^18.0.27",
+        "@types/react-dom": "^18.0.11",
+        "@typescript-eslint/eslint-plugin": "^5.54.1",
+        "@typescript-eslint/parser": "^5.54.1",
+        "@vitejs/plugin-react": "^3.1.0",
+        "@vitejs/plugin-react-swc": "^3.2.0",
+        "autoprefixer": "^10.4.14",
+        "babel-loader": "^9.1.2",
+        "eslint": "^8.36.0",
+        "eslint-config-prettier": "^8.7.0",
+        "eslint-plugin-import": "^2.25.3",
+        "eslint-plugin-jsx-a11y": "^6.5.1",
+        "eslint-plugin-prettier": "^4.2.1",
+        "eslint-plugin-react": "^7.32.2",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "eslint-plugin-simple-import-sort": "^10.0.0",
+        "eslint-plugin-storybook": "^0.6.11",
+        "husky": "^8.0.3",
+        "lint-staged": "^13.2.0",
+        "postcss": "^8.4.21",
+        "postcss-loader": "^7.0.2",
+        "prettier": "^2.8.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-hooks": "^1.0.1",
+        "typescript": "^4.9.3",
+        "vite": "^4.1.4",
+        "vite-plugin-dts": "^2.1.0",
+        "vite-plugin-linter": "^2.0.2",
+        "vite-tsconfig-paths": "^4.0.5"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/use-selectify.es.js",
+            "require": "./dist/use-selectify.umd.js"
+        },
+        "./dist/style.css": "./dist/style.css",
+        "./package.json": "./package.json"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged"
+        }
+    },
+    "lint-staged": {
+        "src/**/*.{js,jsx,ts,tsx}": [
+            "yarn lint:fix",
+            "yarn format"
+        ]
     }
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx}": [
-      "yarn lint:fix",
-      "yarn format"
-    ]
-  }
 }
