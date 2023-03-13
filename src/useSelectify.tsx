@@ -621,6 +621,7 @@ function useSelectify<T extends HTMLElement>(
 
             // Start drawing box
             setEndPoint({ x: event.pageX, y: event.pageY });
+            setIsDragging(true);
 
             if (!canSelectRef.current) {
                 return;
@@ -752,7 +753,6 @@ function useSelectify<T extends HTMLElement>(
                 }
 
                 setStartPoint(eventStartingPoint);
-                setIsDragging(true);
 
                 parentNode.addEventListener("pointermove", handleDrawRectUpdate, false);
                 ownerDocument.addEventListener("keydown", handleEscapeKeyCancel);
