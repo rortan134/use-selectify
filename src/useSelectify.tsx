@@ -266,6 +266,10 @@ export interface UseSelectProps {
     onEscapeKeyDown?(e: KeyboardEvent): void;
 }
 
+function getSymetricDifference(arrA: Element[], arrB: Element[]) {
+    return arrA.filter((x) => !arrB.includes(x)).concat(arrB.filter((x) => !arrA.includes(x)));
+}
+
 function useSelectify<T extends HTMLElement>(
     ref: React.RefObject<T | undefined | null>,
     options?: UseSelectProps
@@ -414,19 +418,49 @@ function useSelectify<T extends HTMLElement>(
         [onlySelectOnFullOverlap, selectionTolerance]
     );
 
-    const getIntersectedElements = React.useCallback(
-        (intersectionBoxRect: DOMRect, elementsToIntersect: readonly Element[]) => {
-            const intersectedElements: Element[] = [];
+    const observedRectsRef = React.useRef<DOMRectReadOnly[]>([]);
+    const observer = React.useMemo(
+        () =>
+            !IS_SERVER
+                ? new IntersectionObserver(
+                      (entries, ob) => {
+                          ob.disconnect();
+                          observedRectsRef.current = entries.map(
+                              (entry) => entry.boundingClientRect
+                          );
+                      },
+                      { root: ref.current }
+                  )
+                : null,
+        [ref]
+    );
 
+    const getBoundingClientRectsAsync = React.useCallback(
+        (...elements: readonly Element[]): Promise<BoxBoundingPosition[]> =>
+            new Promise((resolve) => {
+                resolve(observedRectsRef.current);
+                elements.forEach((element) => observer?.observe(element));
+            }),
+        [observer]
+    );
+
+    const getIntersectedElements = React.useCallback(
+        async (intersectionBoxRect: DOMRect, elementsToIntersect: readonly Element[]) => {
+            const intersectedElements: Element[] = [];
+            const elementsBoundingRects = await getBoundingClientRectsAsync(...elementsToIntersect);
             for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
-                const itemRect = elementsToIntersect[i].getBoundingClientRect();
-                if (checkIntersection(intersectionBoxRect, itemRect)) {
+                if (
+                    checkIntersection(
+                        intersectionBoxRect,
+                        elementsBoundingRects[i] ?? elementsToIntersect[i].getBoundingClientRect()
+                    )
+                ) {
                     intersectedElements.push(elementsToIntersect[i]);
                 }
             }
             return intersectedElements;
         },
-        [checkIntersection]
+        [checkIntersection, getBoundingClientRectsAsync]
     );
 
     const canSelectRef = React.useRef(false);
@@ -464,17 +498,7 @@ function useSelectify<T extends HTMLElement>(
         [calculateSelectionBox, endPoint, startPoint]
     );
 
-    const getIntersectionsDifference = React.useCallback((intersectedElements: Element[]) => {
-        // Get symetric difference between last intersected elements
-        // and latest intersected elements.
-        return intersectedElements
-            .filter((x) => !lastIntersectedElements.current.includes(x))
-            .concat(
-                lastIntersectedElements.current.filter((x) => !intersectedElements.includes(x))
-            );
-    }, []);
-
-    const checkSelectionBoxIntersect = React.useCallback(() => {
+    const checkSelectionBoxIntersect = React.useCallback(async () => {
         const parentNode = ref.current;
         const selectionBoxRef = intersectBoxRef.current;
         if (!parentNode || !selectionBoxRef || disabled) {
@@ -490,18 +514,17 @@ function useSelectify<T extends HTMLElement>(
         }
 
         // Check intersection against every selectable element
-        const intersectedElements = getIntersectedElements(
+        const intersectedElements = await getIntersectedElements(
             selectionBoxRef.getBoundingClientRect(),
             matchingElements
         );
-        const difference = getIntersectionsDifference(intersectedElements);
+        intersectionDifference.current = getSymetricDifference(
+            intersectedElements,
+            lastIntersectedElements.current
+        );
 
-        // Check if there's something to be selected and if so, select it
-        if (difference.length > 0) {
-            intersectionDifference.current = difference;
-            if (shouldDelaySelect) handleDelayedSelectionEvent(intersectedElements);
-            else handleSelectionEvent(intersectedElements);
-        }
+        if (shouldDelaySelect) handleDelayedSelectionEvent(intersectedElements);
+        else handleSelectionEvent(intersectedElements);
     }, [
         disabled,
         findMatchingElements,
@@ -723,7 +746,7 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const handleDrawRectStart = React.useCallback(
-        (event: PointerEvent) => {
+        async (event: PointerEvent) => {
             if (disabled || IS_SERVER) {
                 return;
             }
@@ -748,7 +771,8 @@ function useSelectify<T extends HTMLElement>(
                 const eventStartingPoint = { x: event.pageX, y: event.pageY };
 
                 if (exclusionZone) {
-                    const elements = getIntersectedElements(
+                    // Check if pointer is in an exclusion zone
+                    const elements = await getIntersectedElements(
                         new DOMRect(eventStartingPoint.x, eventStartingPoint.y, 1, 1),
                         [exclusionZone].flat()
                     );
@@ -814,18 +838,21 @@ function useSelectify<T extends HTMLElement>(
 
     const clearSelection = React.useCallback(() => {
         // Force unselection events
-        intersectionDifference.current = getIntersectionsDifference([]);
+        intersectionDifference.current = getSymetricDifference([], lastIntersectedElements.current);
         lastIntersectedElements.current = selectedElements;
         handleSelectionEvent([]);
-    }, [getIntersectionsDifference, handleSelectionEvent, selectedElements]);
+    }, [handleSelectionEvent, selectedElements]);
 
     const mutateSelections = React.useCallback(
         (update: ((lastSelected: readonly Element[]) => Element[]) | Element[]) => {
             const newSelection = update instanceof Function ? update(selectedElements) : update;
-            intersectionDifference.current = getIntersectionsDifference(newSelection);
+            intersectionDifference.current = getSymetricDifference(
+                newSelection,
+                lastIntersectedElements.current
+            );
             handleSelectionEvent(newSelection);
         },
-        [getIntersectionsDifference, handleSelectionEvent, selectedElements]
+        [handleSelectionEvent, selectedElements]
     );
 
     const getSelectableElements = React.useCallback(
