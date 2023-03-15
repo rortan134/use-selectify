@@ -4,7 +4,7 @@ import "./styles/index.css";
 
 import * as React from "react";
 
-import { fastFilter, isNull } from "./utils/misc";
+import { isNull } from "./utils/misc";
 import { useCallbackRef } from "./utils/useCallbackRef";
 import useEventListener from "./utils/useEventListener";
 
@@ -33,20 +33,6 @@ const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutE
 
 const SELECT_LABEL_NAME = "SelectionBoxLabel";
 const DEFAULT_SCREEN_READER_LABEL = "Drag Selection";
-
-export type Theme = "default" | "outline";
-
-interface SelectifyComponentProps extends React.ComponentPropsWithoutRef<"div"> {
-    parentRef: React.RefObject<HTMLElement | null | undefined>;
-    selectionBox: BoxBoundingPosition | null;
-    isDragging: boolean;
-    overlappedElementsCount: number;
-    label: string | undefined;
-    theme: Theme | undefined;
-    forceMount: boolean;
-}
-
-const SELECT_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 
 const srOnlyStyles = {
     position: "absolute",
@@ -103,7 +89,6 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
             selectionBox,
             isDragging,
             overlappedElementsCount,
-            label,
             theme = "default",
             forceMount,
             id: _,
@@ -381,7 +366,7 @@ function useSelectify<T extends HTMLElement>(
             matchCriteria,
         }: {
             scope: HTMLElement | undefined | null;
-            matchCriteria: string;
+            matchCriteria: string; // CSS Selector
         }) => {
             if (!scope) return;
 
@@ -391,13 +376,14 @@ function useSelectify<T extends HTMLElement>(
                 scope.querySelectorAll(matchCriteria)
             ) as Element[];
 
-            const selectionBoxCanBeIncluded = matchCriteria === "*" || matchCriteria === "div";
-            if (selectionBoxCanBeIncluded) {
-                // Remove selection box from response
-                return fastFilter((el) => el.id !== SELECT_BOX_IDENTIFIER, matchingElements);
-            }
+            // Filter out the selection box element to not include it in the response
+            const filteredMatchingElements = matchingElements.filter(
+                (el) => el.id !== SELECT_BOX_IDENTIFIER
+            );
 
-            return !maxSelections ? matchingElements : matchingElements.slice(0, maxSelections);
+            return maxSelections
+                ? filteredMatchingElements.slice(0, maxSelections)
+                : filteredMatchingElements;
         },
         [maxSelections]
     );
