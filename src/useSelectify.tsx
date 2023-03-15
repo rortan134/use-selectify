@@ -28,11 +28,10 @@ const IS_SERVER = typeof window === "undefined";
 const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
 
 /* -------------------------------------------------------------------------------------------------
- * Select Box Component
+ * SelectionLabel
  * -----------------------------------------------------------------------------------------------*/
 
-const SELECT_BOX_NAME = "SelectBoxOutlet";
-const SELECT_LABEL_NAME = "SelectBoxLabel";
+const SELECT_LABEL_NAME = "SelectionBoxLabel";
 const DEFAULT_SCREEN_READER_LABEL = "Drag Selection";
 
 export type Theme = "default" | "outline";
@@ -61,15 +60,43 @@ const srOnlyStyles = {
     borderWidth: "0",
 } as const;
 
-const Label = React.memo(({ id, children }: { id: string; children: React.ReactNode }) => (
-    <span id={id} aria-live="assertive" style={srOnlyStyles}>
-        {children}
-    </span>
-));
+interface SelectionLabelProps extends React.ComponentPropsWithoutRef<"div"> {
+    id: string;
+    label: string | undefined;
+    children: React.ReactNode;
+}
 
-Label.displayName = SELECT_LABEL_NAME;
+const SelectionLabel = React.memo(({ id, label, children }: SelectionLabelProps) => {
+    const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
+    return (
+        <span id={id} aria-live="assertive" style={srOnlyStyles}>
+            {screenReaderLabel}: {children}
+        </span>
+    );
+});
 
-const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
+SelectionLabel.displayName = SELECT_LABEL_NAME;
+
+/* -------------------------------------------------------------------------------------------------
+ * SelectionBox
+ * -----------------------------------------------------------------------------------------------*/
+
+const SELECT_BOX_NAME = "SelectionBoxOutlet";
+const SELECT_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
+
+export type Theme = "default" | "outline";
+
+interface SelectifyComponentProps extends React.ComponentPropsWithoutRef<"div"> {
+    parentRef: React.RefObject<HTMLElement | null | undefined>;
+    selectionBox: BoxBoundingPosition | null;
+    isDragging: boolean;
+    overlappedElementsCount: number;
+    label: string | undefined;
+    theme: Theme | undefined;
+    forceMount: boolean;
+}
+
+const SelectionBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
     (props: SelectifyComponentProps, forwardedRef) => {
         const {
             parentRef,
@@ -82,30 +109,26 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
             id: _,
             ...selectBoxProps
         } = props;
-
         const boxId = React.useId();
-        const wasDragActiveRef = React.useRef(false);
-        const selectionBoxTheme = `selectify_selection-box_${theme}-theme`;
-
-        const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
         const [liveText, setLiveText] = React.useState("");
+        const wasDragActiveRef = React.useRef(false);
+        const defaultTheme = `selectify_selection-box_${theme}-theme`;
 
         React.useEffect(() => {
             React.startTransition(() => {
                 // Handle label
                 if (wasDragActiveRef.current) {
-                    setLiveText("Drag Selection Off");
+                    setLiveText("Off");
                     return;
                 }
-
-                setLiveText(`${screenReaderLabel}: ${overlappedElementsCount} elements selected`);
+                setLiveText(`${overlappedElementsCount} elements selected`);
                 wasDragActiveRef.current = true;
             });
 
             return () => {
                 wasDragActiveRef.current = false;
             };
-        }, [overlappedElementsCount, screenReaderLabel]);
+        }, [overlappedElementsCount]);
 
         // copy z-index from content to wrapper
         const [contentZIndex, setContentZIndex] = React.useState<string>();
@@ -122,7 +145,7 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                 role="region"
                 tabIndex={-1}
                 aria-labelledby={boxId}
-                className={props.className || selectionBoxTheme}
+                className={props.className || defaultTheme}
                 style={{
                     // Ensure border-box for floating-ui calculations
                     boxSizing: "border-box",
@@ -133,13 +156,15 @@ const SelectBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
                     ...props.style,
                 }}
             >
-                <Label id={boxId}>{liveText}</Label>
+                <SelectionLabel id={boxId} label={props.label}>
+                    {liveText}
+                </SelectionLabel>
             </div>
         ) : null;
     }
 );
 
-SelectBox.displayName = SELECT_BOX_NAME;
+SelectionBox.displayName = SELECT_BOX_NAME;
 
 function promiseWrapper(promise: { default: React.ComponentType<any> }): Promise<{
     default: React.ComponentType<any>;
@@ -149,7 +174,7 @@ function promiseWrapper(promise: { default: React.ComponentType<any> }): Promise
     });
 }
 
-const LazySelectBox = React.lazy(() => promiseWrapper({ default: SelectBox }));
+const LazySelectBox = React.lazy(() => promiseWrapper({ default: SelectionBox }));
 
 /* -------------------------------------------------------------------------------------------------
  * Selectify Hook
@@ -869,6 +894,8 @@ function useSelectify<T extends HTMLElement>(
         return () => forceRerender(0);
     }, [currRender]);
 
+    /* ---------------------------------------------------------------------------------------------- */
+
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (process.env.NODE_ENV === "development" && ref.current) {
             // In development we check that the outlet is an actual children of the ref container
@@ -911,9 +938,10 @@ function useSelectify<T extends HTMLElement>(
                 <LazySelectBox {...selectBoxProps} />
             </React.Suspense>
         ) : (
-            <SelectBox {...selectBoxProps} />
+            <SelectionBox {...selectBoxProps} />
         );
     });
+
     SelectBoxOutlet.displayName = SELECT_BOX_NAME;
 
     return {
@@ -932,4 +960,4 @@ function useSelectify<T extends HTMLElement>(
     };
 }
 
-export { SelectBox, useSelectify };
+export { SelectionBox, useSelectify };
