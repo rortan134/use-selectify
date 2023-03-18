@@ -1,14 +1,13 @@
 "use client";
-
 import * as React from "react";
 import { renderToString } from "react-dom/server";
 
 import { cva, VariantProps } from "class-variance-authority";
 import sanitizeHtml from "sanitize-html";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
-import { useSelectify } from "use-selectify";
+import { useSelectify } from "../../../../src/useSelectify";
 
-import addEventListener from "../../utils/addEventListener";
+import useEventListener from "../../utils/useEventListener";
 
 const blockVariants = cva(
   "group relative w-full rounded-md px-0.5 py-1 text-[#37352f] caret-[#37352f] flex items-start data-[selected=true]:select-none",
@@ -81,7 +80,7 @@ const Block = ({
         onBlur={handleContentChange}
         html={content}
         spellCheck="true"
-        placeholder=" "
+        placeholder="Heading"
         tabIndex={0}
         suppressContentEditableWarning={true}
       />
@@ -116,7 +115,136 @@ interface BlockSchema {
   variant: BlockVariants["variant"];
 }
 
-const initialData: BlockSchema[] = [
+export default function NotionDemo() {
+  const selectionContainerRef = React.useRef<HTMLDivElement>(null);
+  const exclusionZoneRef = React.useRef<HTMLDivElement>(null);
+
+  const { SelectBoxOutlet, clearSelection } = useSelectify(
+    selectionContainerRef,
+    {
+      selectCriteria: "[data-block]",
+      exclusionZone: exclusionZoneRef.current,
+      autoScrollStep: 20,
+      onDragStart: () => {
+        document.body.style.userSelect = "none";
+
+        (window.getSelection
+          ? window.getSelection()
+          : // @ts-ignore IE
+            document.selection
+        ).empty();
+      },
+      onDragEnd: () => {
+        document.body.style.userSelect = "";
+      },
+      onSelect: (el) => {
+        el.setAttribute("data-selected", "true");
+      },
+      onUnselect: (el) => {
+        el.removeAttribute("data-selected");
+      },
+    }
+  );
+
+  const handleKeys = React.useCallback((event: KeyboardEvent) => {
+    switch (event.key) {
+      case "Backspace": {
+        if (
+          document.activeElement &&
+          document.activeElement?.parentElement?.innerText === "" &&
+          exclusionZoneRef?.current?.children &&
+          exclusionZoneRef?.current?.children?.length > 1
+        ) {
+          document.activeElement?.parentElement.remove();
+        }
+        break;
+      }
+      case "Escape": {
+        clearSelection();
+        break;
+      }
+      default:
+        return;
+    }
+  }, []);
+
+  useEventListener(globalThis?.document, "keydown", handleKeys);
+
+  return (
+    <div
+      ref={selectionContainerRef}
+      className="group relative flex w-full flex-col"
+    >
+      <header className="flex w-full flex-shrink-0 select-none justify-center">
+        <div className="w-full min-w-0 max-w-[900px] pl-24">
+          <div className="mt-20 mb-2 flex h-6 flex-wrap text-slate-800/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+              <svg
+                viewBox="0 0 14 14"
+                className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M7 0c3.861 0 7 3.139 7 7s-3.139 7-7 7-7-3.139-7-7 3.139-7 7-7zM3.561 5.295a1.027 1.027 0 1 0 2.054 0 1.027 1.027 0 0 0-2.054 0zm5.557 1.027a1.027 1.027 0 1 1 0-2.054 1.027 1.027 0 0 1 0 2.054zm1.211 2.816a.77.77 0 0 0-.124-1.087.786.786 0 0 0-1.098.107c-.273.407-1.16.958-2.254.958-1.093 0-1.981-.55-2.244-.945a.788.788 0 0 0-1.107-.135.786.786 0 0 0-.126 1.101c.55.734 1.81 1.542 3.477 1.542 1.668 0 2.848-.755 3.476-1.541z"
+                ></path>
+              </svg>
+              Add icon
+            </button>
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+              <svg
+                viewBox="0 0 14 14"
+                className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M2 0a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm0 12h10L8.5 5.5l-2 4-2-1.5L2 12z"
+                ></path>
+              </svg>
+              Add cover
+            </button>
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+              <svg
+                viewBox="0 0 16 16"
+                className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
+              >
+                <path d="M4.095 15.465c.287 0 .499-.137.84-.444l2.523-2.277 4.47.007c2.058 0 3.214-1.19 3.214-3.22V4.22c0-2.03-1.156-3.22-3.213-3.22H3.213C1.163 1 0 2.19 0 4.22V9.53c0 2.037 1.196 3.22 3.165 3.213h.273v1.983c0 .45.24.738.657.738zM3.958 5.156a.454.454 0 01-.444-.45c0-.24.198-.438.444-.438h7.157c.246 0 .445.198.445.437a.45.45 0 01-.445.451H3.958zm0 2.256a.454.454 0 01-.444-.451c0-.24.198-.444.444-.444h7.157a.448.448 0 010 .895H3.958zm0 2.256a.448.448 0 010-.896h4.669c.246 0 .437.206.437.452a.438.438 0 01-.437.444H3.958z"></path>
+              </svg>
+              Add comment
+            </button>
+          </div>
+          <h1
+            className="w-full max-w-full whitespace-pre-wrap break-words p-1 text-4xl font-semibold text-slate-800 caret-slate-900"
+            spellCheck="true"
+            contentEditable="true"
+            placeholder="Untitled"
+            suppressContentEditableWarning={true}
+          >
+            use-selectify notion demo
+          </h1>
+        </div>
+      </header>
+      <section className="relative flex min-h-screen w-full flex-shrink-0 justify-center">
+        <div className="w-full min-w-0 max-w-[900px] px-24 pb-60 pt-8">
+          <div
+            ref={exclusionZoneRef}
+            className="flex w-full flex-col items-start"
+          >
+            {data.map((block, i) => (
+              <Block type={block.type} variant={block.variant} key={i}>
+                {block.content}
+              </Block>
+            ))}
+          </div>
+        </div>
+      </section>
+      <SelectBoxOutlet style={{ backgroundColor: "rgb(191 219 254 / 0.25)" }} />
+    </div>
+  );
+}
+
+const data: BlockSchema[] = [
   {
     type: "paragraph",
     variant: "callout",
@@ -213,139 +341,3 @@ const initialData: BlockSchema[] = [
     content: `<a href="https://github.com/rortan134/use-selectify#readme" className="cursor-pointer text-blue-500 underline-offset-4 hover:underline">Getting Started</a>`,
   },
 ];
-
-export default function NotionDemo() {
-  const selectionContainerRef = React.useRef<HTMLDivElement>(null);
-  const exclusionZoneRef = React.useRef<HTMLDivElement>(null);
-
-  const { SelectBoxOutlet, clearSelection, mutateSelections } = useSelectify(
-    selectionContainerRef,
-    {
-      selectCriteria: "[data-block]",
-      exclusionZone: exclusionZoneRef.current,
-      autoScrollStep: 20,
-      onDragStart: () => {
-        document.body.style.userSelect = "none";
-
-        (window.getSelection
-          ? window.getSelection()
-          : // @ts-ignore IE
-            document.selection
-        ).empty();
-      },
-      onDragEnd: () => {
-        document.body.style.userSelect = "";
-      },
-      onSelect: (el) => {
-        el.setAttribute("data-selected", "true");
-      },
-      onUnselect: (el) => {
-        el.removeAttribute("data-selected");
-      },
-    }
-  );
-
-  const handleKeys = React.useCallback((event: KeyboardEvent) => {
-    switch (event.key) {
-      case "Backspace": {
-        if (
-          document.activeElement &&
-          document.activeElement?.parentElement?.innerText === "" &&
-          exclusionZoneRef?.current?.children &&
-          exclusionZoneRef?.current?.children?.length > 1
-        ) {
-          document.activeElement?.parentElement.remove();
-        }
-        break;
-      }
-      case "Escape": {
-        clearSelection();
-        break;
-      }
-      default:
-        return;
-    }
-  }, []);
-
-  addEventListener(document, "keydown", handleKeys);
-
-  React.useEffect(() => {
-    return () => {
-      document.body.style.userSelect = "";
-    };
-  }, []);
-
-  return (
-    <>
-      <div ref={selectionContainerRef} className="group w-full">
-        <header className="flex w-full flex-shrink-0 select-none justify-center">
-          <div className="w-[900px] min-w-0 max-w-full pl-24">
-            <div className="mt-20 mb-2 flex h-6 flex-wrap text-slate-800/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
-                <svg
-                  viewBox="0 0 14 14"
-                  className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M7 0c3.861 0 7 3.139 7 7s-3.139 7-7 7-7-3.139-7-7 3.139-7 7-7zM3.561 5.295a1.027 1.027 0 1 0 2.054 0 1.027 1.027 0 0 0-2.054 0zm5.557 1.027a1.027 1.027 0 1 1 0-2.054 1.027 1.027 0 0 1 0 2.054zm1.211 2.816a.77.77 0 0 0-.124-1.087.786.786 0 0 0-1.098.107c-.273.407-1.16.958-2.254.958-1.093 0-1.981-.55-2.244-.945a.788.788 0 0 0-1.107-.135.786.786 0 0 0-.126 1.101c.55.734 1.81 1.542 3.477 1.542 1.668 0 2.848-.755 3.476-1.541z"
-                  ></path>
-                </svg>
-                Add icon
-              </button>
-              <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
-                <svg
-                  viewBox="0 0 14 14"
-                  className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M2 0a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm0 12h10L8.5 5.5l-2 4-2-1.5L2 12z"
-                  ></path>
-                </svg>
-                Add cover
-              </button>
-              <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
-                <svg
-                  viewBox="0 0 16 16"
-                  className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
-                >
-                  <path d="M4.095 15.465c.287 0 .499-.137.84-.444l2.523-2.277 4.47.007c2.058 0 3.214-1.19 3.214-3.22V4.22c0-2.03-1.156-3.22-3.213-3.22H3.213C1.163 1 0 2.19 0 4.22V9.53c0 2.037 1.196 3.22 3.165 3.213h.273v1.983c0 .45.24.738.657.738zM3.958 5.156a.454.454 0 01-.444-.45c0-.24.198-.438.444-.438h7.157c.246 0 .445.198.445.437a.45.45 0 01-.445.451H3.958zm0 2.256a.454.454 0 01-.444-.451c0-.24.198-.444.444-.444h7.157a.448.448 0 010 .895H3.958zm0 2.256a.448.448 0 010-.896h4.669c.246 0 .437.206.437.452a.438.438 0 01-.437.444H3.958z"></path>
-                </svg>
-                Add comment
-              </button>
-            </div>
-            <h1
-              className="w-full max-w-full whitespace-pre-wrap break-words p-1 text-4xl font-semibold text-slate-800 caret-slate-900"
-              spellCheck="true"
-              contentEditable="true"
-              placeholder="Untitled"
-              suppressContentEditableWarning={true}
-            >
-              use-selectify notion demo
-            </h1>
-          </div>
-        </header>
-        <section className="flex min-h-screen w-full flex-shrink-0 justify-center">
-          <div className="w-[900px] min-w-0 max-w-full">
-            <div
-              ref={exclusionZoneRef}
-              className="flex w-full flex-col items-start px-24 pb-60 pt-8"
-            >
-              {initialData.map((block, i) => (
-                <Block type={block.type} variant={block.variant}>
-                  {block.content}
-                </Block>
-              ))}
-            </div>
-          </div>
-          <SelectBoxOutlet
-            style={{ backgroundColor: "rgb(191 219 254 / 0.25)" }}
-          />
-        </section>
-      </div>
-    </>
-  );
-}

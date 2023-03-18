@@ -1,8 +1,5 @@
-import {redirect} from "next/navigation"
-import Image from "next/image";
-
-import Logo from "../../public/logo.svg";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-    redirect("/introduction");
+  redirect("/table");
 }

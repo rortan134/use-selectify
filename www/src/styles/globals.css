@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  svg {
+    shape-rendering: crispEdges;
+    text-rendering: optimizeLegibility;
+  }
+
+  svg path {
+    shape-rendering: geometricPrecision;
+  }
+
+  a {
+    @apply touch-pan-y text-inherit no-underline;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+}
+
+.scroll-gutter {
+  scrollbar-gutter: stable;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+[type="checkbox"] {
+  box-sizing: border-box;
+  padding: 0;
+}

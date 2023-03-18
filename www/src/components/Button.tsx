@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
-import type { LinkProps } from "next/link";
+// @ts-ignore runtime export
+import type { LinkRestProps } from "next/link";
 
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "../utils/cn";
@@ -10,13 +11,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-white bg-slate-50 text-slate-900",
+        default: "text-white bg-slate-50 text-slate-900 dark:text-black",
         destructive: "bg-red-500 text-white hover:bg-red-600",
         outline: "bg-transparent border border-slate-200 hover:bg-slate-100",
         subtle: "bg-slate-100 text-slate-900 hover:bg-slate-200",
         ghost:
-          "bg-transparent hover:bg-slate-700 data-[state=open]:text-slate-900 data-[state=open]:bg-slate-100 data-[state=open]:ring-slate-400 text-white",
-        link: "bg-transparent underline-offset-4 hover:underline text-slate-900 hover:bg-transparent",
+          "bg-transparent hover:bg-slate-100 dark:hover:bg-neutral-800 dark:text-slate-100 dark:hover:text-slate-100 dark:data-[state=open]:text-slate-900 data-[state=open]:bg-neutral-900 dark:data-[state=open]:bg-white",
+        link: "bg-transparent dark:bg-transparent underline-offset-4 hover:underline text-slate-900 dark:text-slate-100 hover:bg-transparent dark:hover:bg-transparent",
       },
       size: {
         default: "h-10 py-2 px-4",
@@ -34,11 +35,12 @@ const buttonVariants = cva(
 /**
  * Can either be a Link component or a native button with full typing for each case
  */
-type LinkArgs = (LinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>) & {
+type LinkArgs = (LinkRestProps &
+  React.AnchorHTMLAttributes<HTMLAnchorElement>) & {
   href?: string;
 };
-type ConditionalRestArgs = LinkArgs &
-  React.ButtonHTMLAttributes<HTMLButtonElement>;
+type ButtonArgs = React.ButtonHTMLAttributes<HTMLButtonElement>;
+type ConditionalRestArgs = LinkArgs & ButtonArgs;
 interface IButtonProps extends Omit<ConditionalRestArgs, "href"> {
   // make 'href' optional
   href?: string;
@@ -48,26 +50,20 @@ export interface ButtonProps
   extends IButtonProps,
     VariantProps<typeof buttonVariants> {}
 
-const Button = React.forwardRef<
-  HTMLButtonElement | HTMLAnchorElement,
-  ButtonProps
->(({ href, className, variant, size, ...props }, ref) => {
-  const classes = cn(buttonVariants({ variant, size, className }));
-  return href ? (
-    <Link
-      href={href}
-      className={classes}
-      ref={ref as React.RefObject<HTMLAnchorElement>}
-      {...props}
-    />
+const Button = ({
+  href,
+  disabled,
+  className,
+  variant,
+  size,
+  ...props
+}: ButtonProps) => {
+  const classes = cn(buttonVariants({ variant, size }), className);
+  return href && !disabled ? (
+    <Link href={href} className={classes} {...props} />
   ) : (
-    <button
-      className={classes}
-      ref={ref as React.RefObject<HTMLButtonElement>}
-      {...props}
-    />
+    <button className={classes} {...props} />
   );
-});
-Button.displayName = "Button";
+};
 
-export { Button, buttonVariants };
+export { Button };

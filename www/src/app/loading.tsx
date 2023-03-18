@@ -3,7 +3,7 @@ import Logo from "../../public/logo.svg";
 
 export default function loading() {
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
+    <div className="h-full absolute inset-0 flex items-center justify-center">
       <Image
         src={Logo}
         className="aspect-square mix-blend-difference"

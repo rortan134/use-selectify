@@ -1,14 +1,25 @@
-// @ts-check
 /** @type {import("next").NextConfig} */
-import * as libMetadata from "../package.json" assert { type: "json" };
-
 const config = {
   reactStrictMode: true,
   experimental: {
     appDir: true,
+    typedRoutes: true,
   },
-  publicRuntimeConfig: {
-    version: libMetadata.version,
+  transpilePackages: ["../"],
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/table",
+        permanent: false,
+      },
+      {
+        source: "/docs",
+        destination: "https://github.com/rortan134/use-selectify#readme",
+        permanent: false,
+      },
+    ];
   },
 };
+
 export default config;
