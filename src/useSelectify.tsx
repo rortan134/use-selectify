@@ -500,8 +500,8 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const selectionBox: BoxBoundingPosition | null = React.useMemo(
-        () => calculateSelectionBox(startPoint, endPoint),
-        [calculateSelectionBox, endPoint, startPoint]
+        () => calculateSelectionBox(boxStartingPoint, boxEndingPoint),
+        [calculateSelectionBox, boxEndingPoint, boxStartingPoint]
     );
 
     const matchingElementsRef = React.useRef<Element[] | undefined>([]);
@@ -832,7 +832,7 @@ function useSelectify<T extends HTMLElement>(
                     return;
                 }
 
-                setStartPoint(eventStartingPoint);
+                setBoxStartingPoint(eventStartingPoint);
 
                 parentNode.addEventListener("pointermove", handleDrawRectUpdate, {
                     passive: true,
@@ -980,7 +980,7 @@ function useSelectify<T extends HTMLElement>(
             ref: intersectBoxRef,
             parentRef: ref,
             selectionBox: selectionBox,
-            isDragging: isDragging,
+            isDragging: isActive,
             overlappedElementsCount: selectedElements.length + 1,
             theme: theme,
             label: label,
@@ -1002,7 +1002,7 @@ function useSelectify<T extends HTMLElement>(
     return {
         SelectBoxOutlet,
         selectedElements,
-        isDragging,
+        isDragging: isActive,
         hasSelected,
         selectionBox,
         getSelectableElements,
