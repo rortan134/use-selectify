@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import localFont from "next/font/local";
 
 import "~/styles/globals.css";
@@ -17,7 +16,7 @@ const SegoeUI = localFont({
   variable: "--font-segoe",
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;

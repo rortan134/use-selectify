@@ -1,9 +1,8 @@
 import * as React from "react";
 import Link from "next/link";
-// @ts-ignore runtime export
 import type { LinkRestProps } from "next/link";
 
-import { VariantProps, cva } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const buttonVariants = cva(
