@@ -91,7 +91,6 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectifyComponentProps>(
             overlappedElementsCount,
             theme = "default",
             forceMount,
-            id: _,
             ...selectBoxProps
         } = props;
         const boxId = React.useId();
@@ -256,6 +255,7 @@ export interface UseSelectProps {
     hideOnScroll?: boolean;
     theme?: Theme;
     lazyLoad?: boolean;
+    scrollContext?: HTMLElement | Window;
     disabled?: boolean;
     forceMount?: boolean;
     onSelect?(element: Element): void;
@@ -269,6 +269,8 @@ export interface UseSelectProps {
 function getSymetricDifference(arrA: Element[], arrB: Element[]) {
     return arrA.filter((x) => !arrB.includes(x)).concat(arrB.filter((x) => !arrA.includes(x)));
 }
+
+let originalElementTouchAction: string;
 
 function useSelectify<T extends HTMLElement>(
     ref: React.RefObject<T | undefined | null>,
@@ -290,6 +292,7 @@ function useSelectify<T extends HTMLElement>(
         selectionDelay,
         label,
         lazyLoad,
+        scrollContext = globalThis?.window,
         theme,
         selectionTolerance = 0,
         onSelect = () => {},
@@ -307,6 +310,7 @@ function useSelectify<T extends HTMLElement>(
     const [endPoint, setEndPoint] = React.useState<PositionPoint>(NULL_OBJ);
     const [isDragging, setIsDragging] = React.useState(false);
     const [selectedElements, setSelectedElements] = React.useState<Element[]>([]);
+
     const lastIntersectedElements = React.useRef<Element[]>([]);
     const intersectBoxRef = React.useRef<HTMLDivElement>(null);
     const selectionTimerRef = React.useRef(0);
@@ -542,6 +546,7 @@ function useSelectify<T extends HTMLElement>(
     const handleAutomaticWindowScroll = React.useCallback(
         (event: PointerEvent, { cancelLast }: { cancelLast?: boolean } = {}) => {
             if (cancelLast) {
+                // Cancel last static-pointer auto-scroll schedule
                 window.clearTimeout(scrollTimerRef.current);
             }
 
@@ -581,8 +586,10 @@ function useSelectify<T extends HTMLElement>(
             );
             const maxScrollX = documentWidth - viewportWidth;
             const maxScrollY = documentHeight - viewportHeight;
-            const currentScrollX = window.pageXOffset;
-            const currentScrollY = window.pageYOffset;
+            const currentScrollX =
+                scrollContext instanceof Window ? scrollContext.scrollX : scrollContext.scrollLeft;
+            const currentScrollY =
+                scrollContext instanceof Window ? scrollContext.scrollY : scrollContext.scrollTop;
             const canScrollUp = currentScrollY > 0;
             const canScrollDown = currentScrollY < maxScrollY;
             const canScrollLeft = currentScrollX > 0;
@@ -614,15 +621,10 @@ function useSelectify<T extends HTMLElement>(
 
             // Adjust window scroll
             if (nextScrollX !== currentScrollX || nextScrollY !== currentScrollY) {
-                window.scrollTo(nextScrollX, nextScrollY);
-                if (!cancelLast) {
-                    // Handle static-pointer selection
-                    setEndPoint({
-                        x: event.clientX + nextScrollX,
-                        y: event.clientY + nextScrollY,
-                    });
-                    checkSelectionBoxIntersect();
-                }
+                scrollContext.scrollTo(nextScrollX, nextScrollY);
+                // ToDo: handle static-pointer selections
+                // Currently only selects on pointermove
+
                 // Schedule static-pointer auto-scroll with current event
                 // Can be cancelled
                 scrollTimerRef.current = window.setTimeout(
@@ -631,7 +633,7 @@ function useSelectify<T extends HTMLElement>(
                 );
             }
         },
-        [autoScrollEdgeDistance, autoScrollStep, checkSelectionBoxIntersect]
+        [autoScrollEdgeDistance, autoScrollStep, scrollContext]
     );
 
     const eventsCacheRef = React.useRef<PointerEvent[]>([]);
@@ -687,7 +689,7 @@ function useSelectify<T extends HTMLElement>(
     const cancelRectDraw = React.useCallback(() => {
         const parentNode = ref.current;
         if (!parentNode) return;
-        parentNode.removeEventListener("pointermove", handleDrawRectUpdate, false);
+        window.clearTimeout(scrollTimerRef.current);
         window.removeEventListener("scroll", cancelRectDraw);
         window.clearTimeout(scrollTimerRef.current);
 
