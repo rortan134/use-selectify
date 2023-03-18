@@ -9,7 +9,7 @@ import * as Toolbar from "@radix-ui/react-toolbar";
 import usePan from "./usePan";
 import useZoom from "./useZoom";
 import useLast from "./useLast";
-import { useSelectify } from "../../../../src/useSelectify";
+import { useSelectify } from "use-selectify";
 
 import addEventListener from "../../utils/useEventListener";
 import { cn } from "../../utils/cn";

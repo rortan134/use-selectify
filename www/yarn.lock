@@ -2463,10 +2463,10 @@ prelude-ls@^1.2.1:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
 
-prettier-plugin-tailwindcss@^0.2.1:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/prettier-plugin-tailwindcss/-/prettier-plugin-tailwindcss-0.2.4.tgz#ed0ca759bc948eb2bc48b419c6e57eb2adabdb0a"
-  integrity sha512-wMyugRI2yD8gqmMpZSS8kTA0gGeKozX/R+w8iWE+yiCZL09zY0SvfiHfHabNhjGhzxlQ2S2VuTxPE3T72vppCQ==
+prettier-plugin-tailwindcss@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-tailwindcss/-/prettier-plugin-tailwindcss-0.2.5.tgz#fb9f07f22d0658fdedbf4d83254bf907656f7500"
+  integrity sha512-vZ/iKieyCx0WTxHbkf5E1rBlv/ybFk8WTT4hL5W2jlVxum2Zbe0jMUpuQdDrpa4z2vnPiJ5KIWCqL/kd16fKYg==
 
 prettier@^2.8.1:
   version "2.8.4"
@@ -2948,10 +2948,10 @@ use-isomorphic-layout-effect@^1.1.1:
   resolved "https://registry.yarnpkg.com/use-isomorphic-layout-effect/-/use-isomorphic-layout-effect-1.1.2.tgz#497cefb13d863d687b08477d9e5a164ad8c1a6fb"
   integrity sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==
 
-use-selectify@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/use-selectify/-/use-selectify-0.3.3.tgz#77a744da2d1bc9cbd15f5a407c61642b53427c95"
-  integrity sha512-dEHJ56SDR1CP8s+G6yL86mIIB5o35/Qon2G32CbROr6lzoChtE1EPDL9EaE2/iy82A4jxnGMniRTdFJLV239fw==
+use-selectify@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/use-selectify/-/use-selectify-0.3.4.tgz#0e98ac29c15d8f171c31514f144f485ec5eadd87"
+  integrity sha512-pT1VR7Zx8m2Y4dRKfYYAh1A19HHn5Ncg2ilYY+D7XYgDOS/t4LQGSe1/M6gFWqJFgA7Jv54WwjQ4C2ysvR1uzg==
 
 use-sidecar@^1.1.2:
   version "1.1.2"

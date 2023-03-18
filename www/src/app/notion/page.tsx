@@ -2,10 +2,10 @@
 import * as React from "react";
 import { renderToString } from "react-dom/server";
 
-import { cva, VariantProps } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import sanitizeHtml from "sanitize-html";
-import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
-import { useSelectify } from "../../../../src/useSelectify";
+import ContentEditable, { type ContentEditableEvent } from "react-contenteditable";
+import { useSelectify } from "use-selectify";
 
 import useEventListener from "../../utils/useEventListener";
 
@@ -41,7 +41,6 @@ const Block = ({
   variant: BlockVariants["variant"];
   children: React.ReactNode;
 }) => {
-  if (!children) return null;
   const [content, setContent] = React.useState(renderToString(<>{children}</>));
   const [isHovering, setIsHovering] = React.useState(false);
 
@@ -66,6 +65,8 @@ const Block = ({
     },
     []
   );
+
+  if (!children) return null;
 
   return (
     <div

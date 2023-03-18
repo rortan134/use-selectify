@@ -2,12 +2,11 @@
 import * as React from "react";
 
 import { Input } from "../../components/Input";
-import { Separator } from "../../components/Separator";
 import { Button } from "../../components/Button";
 import { Checkbox } from "../../components/Checkbox";
 
 import { cn } from "../../utils/cn";
-import { useSelectify } from "../../../../src/useSelectify";
+import { useSelectify } from "use-selectify";
 
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 
