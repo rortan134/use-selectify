@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
 import * as React from "react";
 import { renderToString } from "react-dom/server";
@@ -45,7 +47,7 @@ const Block = ({
   const [isHovering, setIsHovering] = React.useState(false);
 
   const handleContentChange = React.useCallback(
-    (evt: ContentEditableEvent | React.FocusEvent) => {
+    (event: ContentEditableEvent | React.FocusEvent) => {
       const sanitizeConf = {
         allowedTags: ["div", "span", "b", "i", "a", "p", "h1", "h2", "h3"],
         allowedAttributes: {
@@ -53,12 +55,12 @@ const Block = ({
           a: ["href", "class"],
         },
       };
-      const hasContent = evt.currentTarget.innerHTML !== "";
+      const hasContent = event?.currentTarget?.innerHTML !== "";
       setContent(
         sanitizeHtml(
           hasContent
-            ? evt.currentTarget.innerHTML
-            : evt.currentTarget.placeholder,
+            ? event.currentTarget.innerHTML
+            : event.currentTarget.placeholder,
           sanitizeConf
         )
       );
@@ -129,11 +131,7 @@ export default function NotionDemo() {
       onDragStart: () => {
         document.body.style.userSelect = "none";
 
-        (window.getSelection
-          ? window.getSelection()
-          : // @ts-ignore IE
-            document.selection
-        ).empty();
+        window.getSelection()?.empty();
       },
       onDragEnd: () => {
         document.body.style.userSelect = "";

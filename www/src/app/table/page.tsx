@@ -29,11 +29,7 @@ export default function TablePage() {
     onDragStart: () => {
       document.body.style.userSelect = "none";
 
-      (window.getSelection
-        ? window.getSelection()
-        : // @ts-ignore IE
-          document.selection
-      ).empty();
+      window.getSelection()?.empty();
     },
     onDragEnd: () => {
       document.body.style.userSelect = "";
