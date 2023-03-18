@@ -193,7 +193,7 @@ By default the selection box comes with some styling. You can override the class
 
 > **Note**
 >
-> For the absolute positioning to work properly on the selection box, the parent element of the outlet should always be relative: `position: relative;`
+> The <SelectBoxOutlet /> component can be placed anywhere in your page, just make sure that for the absolute positioning to work properly, the parent element of the outlet should always be relative: `position: relative;`
 
 ```tsx
 return (
@@ -374,7 +374,7 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 Drawing your own selection box
 </summary>
 
-Start by creating your box component and pass in the provided `selectionBoxRef`, then apply the `selectionBox` to the styles for the pointer coordinates.
+Start by creating your box component and pass in the provided `selectionBoxRef` from the hook, then apply the `selectionBox` to the styles for the pointer coordinates.
 
 > **Note**
 >
@@ -383,10 +383,10 @@ Start by creating your box component and pass in the provided `selectionBoxRef`,
 ```tsx
 export function App() {
     const selectionContainerRef = React.useRef(null);
-    const { selectionBoxRef } = useSelectify(selectionContainerRef);
+    const { selectionBoxRef, selectionBox } = useSelectify(selectionContainerRef);
 
     const MyCustomSelectionBoxOutlet = () => {
-        // custom logic...
+        // Your custom logic...
         return (
             <div
                 ref={selectionBoxRef}
@@ -412,17 +412,6 @@ export function App() {
 
 </details>
 
-<details>
-<summary>
-Combining drag selection with pan & zoom
-</summary>
-
-<!-- Creating a figma-like canvas. -->
-
-Work in progress...
-
-</details>
-
 ## Options
 
 | Prop                    | Type                                                     | Default          | Description                                                                                                                                             |
@@ -435,13 +424,15 @@ Work in progress...
 | selectCriteria          | string \| undefined                                      | "\*"             | The specific CSS Selector criteria to match for selecting elements.                                                                                     |
 | onlySelectOnFullOverlap | boolean                                                  | false            | Will only select the element if the full rect intersects.                                                                                               |
 | onlySelectOnDragEnd     | boolean                                                  | false            | Will only select elements after user has stopped dragging or cursor has left the screen while dragging.                                                 |
-| selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected to prevent accidental selection.                                                           |
+| selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected to prevent accidental selection.                                                            |
 | label                   | string                                                   | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
 | selectionTolerance      | number                                                   | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
 | activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl, Cmd and Alt.         |
 | activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
-| hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                                                     |
+| hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                       |
+| exclusionZone           | Element \| Element[] \| string                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
+| scrollContext            | HTMLElement \| Window                                                  | `window`            | Sets the scrollable element for the automatic window scrolling to react.                                                       |
 | exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
 | lazyLoad                | boolean                                                  | false            | Defers loading the selection box.                                                                                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
@@ -472,13 +463,23 @@ By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/WCAG2
 
 3. Arrow navigation: Make sure every selectable element can also be selected using the arrow keys.
 
-> Tip: By default, user-select is enabled for all elements, which means the user can select text or elements by dragging the cursor over them, to prevent accidental text selection, Disable user-select on the parent container of the selection box while the user is dragging.
+## FAQ
 
-```css
--webkit-user-select: none; /* Safari */
--ms-user-select: none; /* IE 10+ */
-user-select: none;
-```
+### How performant is it?
+
+Stays decently performant up until a few thousands elements. Open to improvements.
+
+### Can I use this library with an older version of React?
+
+No, currently the only supported version is ^18.0.0.
+
+### How do I it make mobile friendly
+
+Although we support touch interactions, it should be considered the conflict of panning/scrolling and selecting when presented with a single gesture. To effectively support mobile devices in an accessible way you would need to provide a way to switch between panning and drag-selecting like seen in our [figma example](/www/src/app/figma/page.tsx) and even then, such interactions are not recommended in small viewports.
+
+### Does this support React Native?
+
+No, not currently.
 
 ## Development
 
@@ -500,7 +501,7 @@ user-select: none;
     yarn
     ```
 
-4. Start the Storybook preview for development
+4. Start the Storybook preview for development and modify as you please.
 
     ```sh
     yarn storybook
