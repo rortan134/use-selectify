@@ -747,6 +747,25 @@ function useSelectify<T extends HTMLElement>(
         ]
     );
 
+    const isInExclusionZone = React.useCallback(
+        async (pointer: RequiredProperty<PositionPoint>) => {
+            if (!exclusionZone) return false;
+            const elementsToBeExcluded =
+                typeof exclusionZone === "string" // handle CSS Selectors
+                    ? matchingElementsRef.current
+                    : [exclusionZone].flat(); // Make sure exclusionZone will be an array
+
+            if (!elementsToBeExcluded) return false;
+
+            const intersectsExclusionZone = await getIntersectedElements(
+                new DOMRect(pointer.x, pointer.y, 1, 1), // Check intersection with a 1x1 artificial rect
+                elementsToBeExcluded
+            );
+            return intersectsExclusionZone.length > 0;
+        },
+        [exclusionZone, getIntersectedElements]
+    );
+
     const handleDrawRectStart = React.useCallback(
         async (event: PointerEvent) => {
             if (disabled || IS_SERVER) {
@@ -772,13 +791,8 @@ function useSelectify<T extends HTMLElement>(
 
                 const eventStartingPoint = { x: event.pageX, y: event.pageY };
 
-                if (exclusionZone) {
-                    // Check if pointer is in an exclusion zone
-                    const elements = await getIntersectedElements(
-                        new DOMRect(eventStartingPoint.x, eventStartingPoint.y, 1, 1),
-                        [exclusionZone].flat()
-                    );
-                    if (elements.length > 0) return;
+                if (await isInExclusionZone(eventStartingPoint)) {
+                    return;
                 }
 
                 const userCallback = triggerOnDragStart(event);
@@ -818,8 +832,7 @@ function useSelectify<T extends HTMLElement>(
             getIntersectedElements,
             handleDrawRectUpdate,
             handleEscapeKeyCancel,
-            hideOnScroll,
-            isMultitouch,
+            isInExclusionZone,
             ownerDocument,
             ref,
             triggerOnDragStart,
