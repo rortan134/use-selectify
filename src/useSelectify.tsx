@@ -953,16 +953,6 @@ function useSelectify<T extends HTMLElement>(
 
     const SelectBoxOutlet = React.memo((props: React.ComponentPropsWithoutRef<"div">) => {
         if (process.env.NODE_ENV === "development" && ref.current) {
-            // In development we check that the outlet is an actual children of the ref container
-            if (
-                Array.isArray(ref.current.children) &&
-                ref.current.children.some((el: Element) => el.id === SELECT_BOX_IDENTIFIER)
-            ) {
-                console.warn(`<SelectBoxOutlet> should be a direct children of your container ref <${ref.current.tagName}>.
-                    Try moving it inside of the selection container.
-                    `);
-            }
-
             if (ref.current.scrollWidth > ref.current.clientWidth && !autoScroll) {
                 console.warn(
                     `use-selectify: <${ref.current.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
