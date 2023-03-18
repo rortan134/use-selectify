@@ -687,7 +687,6 @@ function useSelectify<T extends HTMLElement>(
         window.clearTimeout(scrollTimerRef.current);
         parentNode.removeEventListener("pointermove", handleDrawRectUpdate);
         window.removeEventListener("scroll", cancelRectDraw);
-        window.clearTimeout(scrollTimerRef.current);
 
         // Reset defaults
         setStartPoint(NULL_OBJ);
@@ -699,13 +698,32 @@ function useSelectify<T extends HTMLElement>(
     const handleEscapeKeyCancel = React.useCallback(
         (event: KeyboardEvent) => {
             if (event.key === "Escape") {
+                event.preventDefault();
                 cancelRectDraw();
                 triggerOnEscapeKeyDown(event);
+                ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel, {
+                    capture: true,
+                });
             }
-            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
         },
         [cancelRectDraw, ownerDocument, triggerOnEscapeKeyDown]
     );
+    [];
+
+    const handleScroll = React.useCallback(() => {
+        if (hideOnScroll) {
+            if (autoScroll) {
+                throw new Error("use-selectify: hideOnScroll & autoScroll are not compatible");
+            }
+
+            cancelRectDraw();
+        }
+
+        const parentNode = ref.current;
+        if (!parentNode) return;
+
+        parentNodeRectRef.current = parentNode.getBoundingClientRect();
+    }, [autoScroll, cancelRectDraw, hideOnScroll, ref]);
 
     const handleDrawRectEnd = React.useCallback(
         (event: PointerEvent) => {
@@ -735,7 +753,7 @@ function useSelectify<T extends HTMLElement>(
             checkSelectionBoxIntersect,
             disabled,
             handleEscapeKeyCancel,
-            isMultitouch,
+            isMultitouchActive,
             onlySelectOnDragEnd,
             ownerDocument,
             ref,
@@ -774,7 +792,7 @@ function useSelectify<T extends HTMLElement>(
             const isModifierKey = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey;
             const userKeyPressed = activateOnKey?.some((key) => event.getModifierState(key));
 
-            if (!parentNode || !shouldActivate || isMultitouch) {
+            if (!parentNode || !shouldActivate || isMultitouchActive) {
                 return;
             }
 
@@ -827,16 +845,6 @@ function useSelectify<T extends HTMLElement>(
 
                 // Add event to cache
                 eventsCacheRef.current.push(event);
-
-                if (hideOnScroll) {
-                    if (autoScroll) {
-                        throw new Error(
-                            "use-selectify: hideOnScroll & autoScroll are not compatible"
-                        );
-                    }
-
-                    window.addEventListener("scroll", cancelRectDraw);
-                }
             }
         },
         [
@@ -894,12 +902,14 @@ function useSelectify<T extends HTMLElement>(
 
     const resetEventsCache = useCallbackRef(() => (eventsCacheRef.current = []));
 
-    useEventListener(ref.current, "pointerdown", handleDrawRectStart, true);
-    useEventListener(ownerDocument, "pointercancel", cancelRectDraw, false);
-    useEventListener(ownerDocument, "blur", cancelRectDraw, false);
-    useEventListener(ownerDocument, "pointerup", handleDrawRectEnd, false);
-    useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd, false);
-    useEventListener(globalThis?.window, "resize", resetEventsCache, false);
+    useEventListener(ref.current, "pointerdown", handleDrawRectStart, {
+        passive: false,
+    });
+    useEventListener(ownerDocument, "pointercancel", cancelRectDraw);
+    useEventListener(ownerDocument, "blur", cancelRectDraw);
+    useEventListener(ownerDocument, "pointerup", handleDrawRectEnd);
+    useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd);
+    useEventListener(globalThis?.window, "resize", resetEventsCache);
 
     useIsomorphicLayoutEffect(() => {
         // Prevent browser from trying to claim the pointermove event for panning on mobile
