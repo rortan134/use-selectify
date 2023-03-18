@@ -14,11 +14,6 @@ function sum(a: { x: number; y: number }, b: { x: number; y: number }) {
   return { x: a.x + b.x, y: a.y + b.y };
 }
 
-// TS Type Guard
-export const isTouchEvent = (e: any): e is React.TouchEvent => {
-  return (e as React.TouchEvent).touches !== undefined;
-};
-
 const ORIGIN: { x: number; y: number } = Object.freeze({ x: 0, y: 0 });
 
 export default function usePan(
@@ -35,15 +30,8 @@ export default function usePan(
       e.preventDefault();
     }
 
-    if (isTouchEvent(e) && e.touches.length > 1) {
-      return;
-    }
-
     const lastPoint = lastPointRef.current;
-    const point = isTouchEvent(e)
-      ? { x: e.touches[0].pageX, y: e.touches[0].pageY }
-      : { x: (e as MouseEvent).pageX, y: (e as MouseEvent).pageY };
-
+    const point = { x: (e as MouseEvent).pageX, y: (e as MouseEvent).pageY };
     lastPointRef.current = point;
 
     setPanState((panState) => {
@@ -55,52 +43,22 @@ export default function usePan(
   }, []);
 
   const endPan = React.useCallback(() => {
-    document.removeEventListener("mousemove", pan);
-    document.removeEventListener("mouseup", endPan);
+    document.removeEventListener("pointermove", pan);
+    document.removeEventListener("pointerup", endPan);
+    document.removeEventListener("pointercancel", endPan);
   }, [pan]);
-
-  const startSwipe = React.useCallback(
-    (e: TouchEvent) => {
-      if (!ref.current) return;
-      ref.current.addEventListener("touchmove", pan);
-      ref.current.addEventListener("touchend", endPan);
-      ref.current.addEventListener("touchcancel", endPan);
-
-      lastPointRef.current = {
-        x: e.changedTouches[0].pageX,
-        y: e.changedTouches[0].pageY,
-      };
-    },
-    [endPan, pan, ref]
-  );
-
-  const endSwipe = React.useCallback(() => {
-    if (!ref.current) return;
-    ref.current.removeEventListener("touchmove", pan);
-    ref.current.removeEventListener("touchend", endSwipe);
-    ref.current.removeEventListener("touchstart", startSwipe);
-  }, [pan, ref, startSwipe]);
 
   const startPan = React.useCallback(
     (event: React.PointerEvent<Element>) => {
       if (!ref.current) return;
 
-      document.addEventListener("mousemove", pan);
-      document.addEventListener("mouseup", endPan);
+      document.addEventListener("pointermove", pan);
+      document.addEventListener("pointerup", endPan);
+      document.addEventListener("pointercancel", endPan);
 
-      ref.current.addEventListener("touchstart", startSwipe, { passive: true });
-      ref.current.addEventListener("touchend", endSwipe);
-
-      if (isTouchEvent(event)) {
-        lastPointRef.current = {
-          x: event.touches[0].pageX,
-          y: event.touches[0].pageY,
-        };
-      } else {
-        lastPointRef.current = { x: event.pageX, y: event.pageY };
-      }
+      lastPointRef.current = { x: event.pageX, y: event.pageY };
     },
-    [endPan, endSwipe, pan, ref, startSwipe]
+    [endPan, pan, ref]
   );
 
   return [panState, startPan];

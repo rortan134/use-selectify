@@ -73,6 +73,7 @@ export default function useZoom(ref: React.RefObject<HTMLElement | null>) {
 
   const handlePinchStart = React.useCallback(
     (e: TouchEvent) => {
+      if (!e.touches[0] || !e.touches[1]) return;
       const pointA = getPointFromTouch(e.touches[0], ref);
       const pointB = getPointFromTouch(e.touches[1], ref);
 
@@ -86,6 +87,7 @@ export default function useZoom(ref: React.RefObject<HTMLElement | null>) {
   const handlePinchMove = React.useCallback(
     (e: TouchEvent) => {
       if (isTouchEvent(e) && e.touches.length == 2) {
+        if (!e.touches[0] || !e.touches[1]) return;
         const pointA = getPointFromTouch(e.touches[0], ref);
         const pointB = getPointFromTouch(e.touches[1], ref);
 
