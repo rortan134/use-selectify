@@ -251,7 +251,7 @@ export interface UseSelectProps {
     /**
      * Won't enable the selection box if the user tries initiating the drag from the specified element.
      */
-    exclusionZone?: Element | Element[] | null;
+    exclusionZone?: Element | Element[] | string | null;
     hideOnScroll?: boolean;
     theme?: Theme;
     lazyLoad?: boolean;
@@ -271,6 +271,7 @@ function getSymetricDifference(arrA: Element[], arrB: Element[]) {
 }
 
 let originalElementTouchAction: string;
+let originalBodyUserSelect: string;
 
 function useSelectify<T extends HTMLElement>(
     ref: React.RefObject<T | undefined | null>,
@@ -311,6 +312,8 @@ function useSelectify<T extends HTMLElement>(
     const [isDragging, setIsDragging] = React.useState(false);
     const [selectedElements, setSelectedElements] = React.useState<Element[]>([]);
 
+    // Caching rect to not force reflows with getBoundingClientRect calls
+    const parentNodeRectRef = React.useRef<DOMRect>();
     const lastIntersectedElements = React.useRef<Element[]>([]);
     const intersectBoxRef = React.useRef<HTMLDivElement>(null);
     const selectionTimerRef = React.useRef(0);
@@ -327,17 +330,15 @@ function useSelectify<T extends HTMLElement>(
 
     const select = React.useCallback(
         (elementsToSelect: Element[]) => {
-            const lastElements = lastIntersectedElements.current;
             const difference = intersectionDifference.current;
-            if (disableUnselection && elementsToSelect.length < lastElements.length) {
-                return;
+            const hasSelected = elementsToSelect.length > lastIntersectedElements.current.length;
+            const hasUnselected = elementsToSelect.length < lastIntersectedElements.current.length;
+
+            if (difference.length === 0 || (disableUnselection && hasUnselected)) {
+                return; // nothing to be selected
             }
 
             setSelectedElements(elementsToSelect);
-
-            if (!lastElements || !difference) return;
-            const hasSelected = elementsToSelect.length > lastElements.length;
-            const hasUnselected = elementsToSelect.length < lastElements.length;
 
             if (hasSelected) {
                 difference.forEach((element) => triggerSelectEvent(element));
@@ -396,6 +397,7 @@ function useSelectify<T extends HTMLElement>(
         [maxSelections]
     );
 
+    // Check if two boxes overlap
     const checkIntersection = React.useCallback(
         (boxA: BoxBoundingPosition, boxB: BoxBoundingPosition) => {
             const { left: aLeft, top: aTop, width: aWidth, height: aHeight } = boxA;
@@ -440,7 +442,7 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getBoundingClientRectsAsync = React.useCallback(
-        (...elements: readonly Element[]): Promise<BoxBoundingPosition[]> =>
+        (elements: readonly Element[]): Promise<BoxBoundingPosition[]> =>
             new Promise((resolve) => {
                 resolve(observedRectsRef.current);
                 elements.forEach((element) => observer?.observe(element));
@@ -451,12 +453,12 @@ function useSelectify<T extends HTMLElement>(
     const getIntersectedElements = React.useCallback(
         async (intersectionBoxRect: DOMRect, elementsToIntersect: readonly Element[]) => {
             const intersectedElements: Element[] = [];
-            const elementsBoundingRects = await getBoundingClientRectsAsync(...elementsToIntersect);
+            const elementsBoundingRects = await getBoundingClientRectsAsync(elementsToIntersect);
             for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
                 if (
                     checkIntersection(
                         intersectionBoxRect,
-                        elementsBoundingRects[i] ?? elementsToIntersect[i].getBoundingClientRect()
+                        elementsBoundingRects[i] ?? elementsToIntersect[i].getBoundingClientRect() // fallback to regular synchronous getBoundingClientRect
                     )
                 ) {
                     intersectedElements.push(elementsToIntersect[i]);
@@ -502,25 +504,17 @@ function useSelectify<T extends HTMLElement>(
         [calculateSelectionBox, endPoint, startPoint]
     );
 
+    const matchingElementsRef = React.useRef<Element[] | undefined>([]);
+
     const checkSelectionBoxIntersect = React.useCallback(async () => {
-        const parentNode = ref.current;
         const selectionBoxRef = intersectBoxRef.current;
-        if (!parentNode || !selectionBoxRef || disabled) {
+        if (!selectionBoxRef || disabled || !matchingElementsRef.current) {
             return;
         }
-
-        const matchingElements = findMatchingElements({
-            scope: parentNode,
-            matchCriteria: selectCriteria,
-        });
-        if (!matchingElements || matchingElements.length === 0) {
-            return;
-        }
-
         // Check intersection against every selectable element
         const intersectedElements = await getIntersectedElements(
             selectionBoxRef.getBoundingClientRect(),
-            matchingElements
+            matchingElementsRef.current
         );
         intersectionDifference.current = getSymetricDifference(
             intersectedElements,
@@ -531,13 +525,9 @@ function useSelectify<T extends HTMLElement>(
         else handleSelectionEvent(intersectedElements);
     }, [
         disabled,
-        findMatchingElements,
-        getIntersectionsDifference,
         getIntersectedElements,
         handleDelayedSelectionEvent,
         handleSelectionEvent,
-        ref,
-        selectCriteria,
         shouldDelaySelect,
     ]);
 
@@ -640,36 +630,41 @@ function useSelectify<T extends HTMLElement>(
     const throttledRequestAnimationFrame = useCallbackRef(
         throttle(globalThis?.window?.requestAnimationFrame)
     );
-    const isMultitouch = eventsCacheRef.current.length >= 2;
+    const isMultitouchActive = eventsCacheRef.current.length >= 2;
 
     const handleDrawRectUpdate = React.useCallback(
         (event: PointerEvent) => {
             // Disable on multitouch for pinch and other gestures
-            if (disabled || isMultitouch) {
+            if (disabled || isMultitouchActive) {
                 return;
             }
 
-            // Update last cache to current one
+            // Update last event cache to current one
             const eventIndex = eventsCacheRef.current.findIndex(
                 (cachedEv) => cachedEv.pointerId === event.pointerId
             );
             eventsCacheRef.current[eventIndex] = event;
 
+            if (!parentNodeRectRef.current) return;
             // Start drawing box
-            setEndPoint({ x: event.pageX, y: event.pageY });
-            setIsDragging(true);
+            setBoxEndingPoint({
+                x: event.clientX - parentNodeRectRef.current.left,
+                y: event.clientY - parentNodeRectRef.current.top,
+            });
+            setIsActive(true);
 
             if (!canSelectRef.current) {
                 return;
             }
 
             if (!onlySelectOnDragEnd) {
-                // Only throttle selection and not drawing to keep it fluid
-                throttledRequestAnimationFrame(checkSelectionBoxIntersect);
-            }
-
-            if (autoScroll) {
-                handleAutomaticWindowScroll(event, { cancelLast: true });
+                // Only throttle selection to keep drawing fluid
+                throttledRequestAnimationFrame(() => {
+                    checkSelectionBoxIntersect();
+                    if (autoScroll) {
+                        handleAutomaticWindowScroll(event, { cancelLast: true });
+                    }
+                });
             }
 
             triggerOnDragMove(event, lastIntersectedElements.current);
@@ -679,7 +674,7 @@ function useSelectify<T extends HTMLElement>(
             checkSelectionBoxIntersect,
             disabled,
             handleAutomaticWindowScroll,
-            isMultitouch,
+            isMultitouchActive,
             onlySelectOnDragEnd,
             throttledRequestAnimationFrame,
             triggerOnDragMove,
@@ -690,6 +685,7 @@ function useSelectify<T extends HTMLElement>(
         const parentNode = ref.current;
         if (!parentNode) return;
         window.clearTimeout(scrollTimerRef.current);
+        parentNode.removeEventListener("pointermove", handleDrawRectUpdate);
         window.removeEventListener("scroll", cancelRectDraw);
         window.clearTimeout(scrollTimerRef.current);
 
@@ -718,12 +714,13 @@ function useSelectify<T extends HTMLElement>(
                 return;
             }
 
-            if (onlySelectOnDragEnd && intersectionDifference.current.length > 0 && !isMultitouch) {
+            if (onlySelectOnDragEnd && !isMultitouchActive) {
                 checkSelectionBoxIntersect();
             }
 
             cancelRectDraw();
-            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel);
+            ownerDocument.removeEventListener("keydown", handleEscapeKeyCancel, { capture: true });
+            document.body.style.webkitUserSelect = originalBodyUserSelect;
 
             // Remove current event from the cache
             const eventIndex = eventsCacheRef.current.findIndex(
@@ -788,8 +785,22 @@ function useSelectify<T extends HTMLElement>(
                 if (target.hasPointerCapture(event.pointerId)) {
                     target.releasePointerCapture(event.pointerId);
                 }
+                // Pointer capture doesn't prevent text selection in Safari
+                // so we remove text selection manually
+                originalBodyUserSelect = document.body.style.webkitUserSelect;
+                document.body.style.webkitUserSelect = "none";
 
-                const eventStartingPoint = { x: event.pageX, y: event.pageY };
+                parentNodeRectRef.current = parentNode.getBoundingClientRect();
+                const eventStartingPoint = {
+                    x: event.clientX - parentNodeRectRef.current.left,
+                    y: event.clientY - parentNodeRectRef.current.top,
+                };
+
+                // Check for elements that can be selected
+                matchingElementsRef.current = findMatchingElements({
+                    scope: ref.current,
+                    matchCriteria: selectCriteria,
+                });
 
                 if (await isInExclusionZone(eventStartingPoint)) {
                     return;
@@ -805,8 +816,14 @@ function useSelectify<T extends HTMLElement>(
 
                 setStartPoint(eventStartingPoint);
 
-                parentNode.addEventListener("pointermove", handleDrawRectUpdate, false);
-                ownerDocument.addEventListener("keydown", handleEscapeKeyCancel);
+                parentNode.addEventListener("pointermove", handleDrawRectUpdate, {
+                    passive: true,
+                });
+                ownerDocument.addEventListener("keydown", handleEscapeKeyCancel, {
+                    capture: true,
+                    once: true,
+                });
+                window.addEventListener("scroll", handleScroll);
 
                 // Add event to cache
                 eventsCacheRef.current.push(event);
@@ -825,16 +842,16 @@ function useSelectify<T extends HTMLElement>(
         [
             activateOnKey,
             activateOnMetaKey,
-            autoScroll,
-            cancelRectDraw,
             disabled,
-            exclusionZone,
-            getIntersectedElements,
+            findMatchingElements,
             handleDrawRectUpdate,
             handleEscapeKeyCancel,
+            handleScroll,
             isInExclusionZone,
+            isMultitouchActive,
             ownerDocument,
             ref,
+            selectCriteria,
             triggerOnDragStart,
         ]
     );
@@ -890,10 +907,10 @@ function useSelectify<T extends HTMLElement>(
         function cancelBrowserTouchActionClaim() {
             const parentNode = ref.current;
             if (!parentNode || disabled) return;
-            const lastStyle = parentNode.style.touchAction;
+            originalElementTouchAction = parentNode.style.touchAction;
             parentNode.style.touchAction = "none";
             return () => {
-                parentNode.style.touchAction = lastStyle;
+                parentNode.style.touchAction = originalElementTouchAction;
             };
         }
 
