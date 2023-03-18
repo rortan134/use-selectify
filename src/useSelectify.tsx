@@ -307,9 +307,9 @@ function useSelectify<T extends HTMLElement>(
     } = options || {};
     const ownerDocument = globalThis?.document;
 
-    const [startPoint, setStartPoint] = React.useState<PositionPoint>(NULL_OBJ);
-    const [endPoint, setEndPoint] = React.useState<PositionPoint>(NULL_OBJ);
-    const [isDragging, setIsDragging] = React.useState(false);
+    const [boxStartingPoint, setBoxStartingPoint] = React.useState<PositionPoint>(NULL_OBJ);
+    const [boxEndingPoint, setBoxEndingPoint] = React.useState<PositionPoint>(NULL_OBJ);
+    const [isActive, setIsActive] = React.useState(false);
     const [selectedElements, setSelectedElements] = React.useState<Element[]>([]);
 
     // Caching rect to not force reflows with getBoundingClientRect calls
@@ -689,9 +689,9 @@ function useSelectify<T extends HTMLElement>(
         window.removeEventListener("scroll", cancelRectDraw);
 
         // Reset defaults
-        setStartPoint(NULL_OBJ);
-        setEndPoint(NULL_OBJ);
-        setIsDragging(false);
+        setBoxStartingPoint(NULL_OBJ);
+        setBoxEndingPoint(NULL_OBJ);
+        setIsActive(false);
         triggerOnDragEnd();
     }, [handleDrawRectUpdate, ref, triggerOnDragEnd]);
 
@@ -931,6 +931,14 @@ function useSelectify<T extends HTMLElement>(
             revert?.();
         };
     }, [disabled, ref]);
+
+    React.useEffect(() => {
+        // Listen for `selectCriteria` changes to instantly pass updates
+        matchingElementsRef.current = findMatchingElements({
+            scope: ref.current,
+            matchCriteria: selectCriteria,
+        });
+    }, [findMatchingElements, ref, selectCriteria]);
 
     React.useEffect(() => {
         return () => {
