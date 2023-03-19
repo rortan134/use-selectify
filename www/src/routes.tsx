@@ -1,5 +1,4 @@
 import React from "react";
-// @ts-ignore runtime export
 import type { Route } from "next";
 
 import { Figma, Table, Table2, Calendar } from "lucide-react";
@@ -35,6 +34,7 @@ export const routes: AppRoute[] = [
     route: "/calendar",
     themeColor: "#131313",
     code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/calendar/page.tsx",
+    disabled: true,
   },
   {
     name: "Notion Demo",

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Button } from "../../components/Button";
 
 import useEventListener from "../../utils/useEventListener";
-import { useSelectify } from "../../../../src/useSelectify";
+import { useSelectify } from "use-selectify";
 import { cn } from "../../utils/cn";
 
 import { ChevronDown, Plus, ChevronRight, ChevronLeft } from "lucide-react";
@@ -84,7 +84,6 @@ export default function CalendarPage() {
       const currentDayBlock: CalendarDay | undefined = selectedCalendarDays.find(
         (calendarDay) => calendarDay.date.getTime() === currentDate.getTime()
       );
-      console.log(currentDayBlock);
       if (currentDayBlock) range.push(currentDayBlock);
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -92,9 +91,9 @@ export default function CalendarPage() {
     return range;
   }, [hasSelected, selectedCalendarDays]);
 
-  React.useEffect(() => {
-    console.log(selectedDateRange);
-  }, [selectedDateRange]);
+//   React.useEffect(() => {
+//     console.log(selectedDateRange);
+//   }, [selectedDateRange]);
 
   /* ---------------------------------------------------------------------------------------------- */
 

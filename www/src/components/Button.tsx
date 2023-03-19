@@ -61,7 +61,7 @@ const Button = ({
   return href && !disabled ? (
     <Link href={href} className={classes} {...props} />
   ) : (
-    <button className={classes} {...props} />
+    <button className={classes} disabled={disabled} {...props} />
   );
 };
 
