@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="en" dir="ltr" className={`${segoeUI.variable} ${inter.variable}`}>
       <Body>
         <Sidebar />
-        <main className="relative w-full">{children}</main>
+        <main className="relative w-full px-3">{children}</main>
         <FloatingButton />
       </Body>
     </html>

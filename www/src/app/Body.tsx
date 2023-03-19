@@ -18,7 +18,7 @@ export default function Body({ children }: { children: React.ReactNode }) {
   return (
     <body
       className={cn(
-        "relative flex w-full flex-col flex-nowrap justify-between transition-colors md:flex-row",
+        "flex w-full flex-col flex-nowrap justify-between transition-colors md:flex-row",
         {
           dark: isDark,
         }

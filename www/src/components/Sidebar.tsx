@@ -31,7 +31,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 h-fit w-full space-y-8 overflow-x-hidden p-1 font-inter tracking-tight transition-colors md:w-72 md:px-3 md:py-6",
+        "md:sticky border-b border-neutral-600 md:border-none md:max-h-screen scrollbar-thin top-0 h-fit w-full scrollbar-thumb-neutral-100 dark:scrollbar-thumb-neutral-200/10 scrollbar-track-transparent space-y-8 overflow-x-hidden py-2 font-inter tracking-tight transition-colors md:w-72 px-3 md:px-1 md:py-5",
         {
           "bg-[#2c2c2c]": currRoute === "/figma",
         }
@@ -98,7 +98,7 @@ export default function Sidebar() {
       {(isOpen && isMobile) || !isMobile ? (
         <nav className="flex w-full flex-col space-y-6">
           <div className="flex w-full flex-col space-y-3">
-            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-200">
+            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Getting Started
             </h2>
             <Button
@@ -118,7 +118,7 @@ export default function Sidebar() {
             <Separator />
           </div>
           <div className="flex w-full flex-col space-y-3">
-            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-200">
+            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Examples
             </h2>
             {routes.map((route) => (
@@ -137,7 +137,7 @@ export default function Sidebar() {
             <Separator />
           </div>
           <div className="flex w-full flex-col space-y-3">
-            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-200">
+            <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Community
             </h2>
             <Button

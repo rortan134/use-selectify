@@ -6,11 +6,11 @@ const config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-segoe)"],
-        inter: ["var(--font-inter)"]
+        inter: ["var(--font-inter)"],
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar")],
 };
 
 module.exports = config;

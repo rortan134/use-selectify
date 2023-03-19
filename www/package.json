@@ -16,7 +16,7 @@
     "@radix-ui/react-toolbar": "^1.0.3",
     "class-variance-authority": "^0.4.0",
     "clsx": "^1.2.1",
-    "lucide-react": "^0.125.0",
+    "lucide-react": "^0.126.0",
     "next": "^13.2.4",
     "react": "18.2.0",
     "react-contenteditable": "^3.3.7",
@@ -29,7 +29,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@types/eslint": "^8.21.2",
+    "@types/eslint": "^8.21.3",
     "@types/node": "^18.15.3",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.28",
@@ -44,6 +44,7 @@
     "postcss": "^8.4.14",
     "prettier": "^2.8.1",
     "prettier-plugin-tailwindcss": "^0.2.5",
+    "tailwind-scrollbar": "^3.0.0",
     "tailwindcss": "^3.2.0",
     "typescript": "^5.0.2"
   },

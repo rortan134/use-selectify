@@ -91,7 +91,7 @@ export default function TablePage() {
           <div className="flex-1 pr-4">
             <div className="relative md:w-1/3">
               <Input type="search" placeholder="Search..." className="pl-10" />
-              <Search className="absolute left-0 top-1/2 ml-3 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+              <Search className="pointer-events-none absolute left-0 top-1/2 ml-3 h-5 w-5 -translate-y-1/2 text-neutral-400" />
             </div>
           </div>
           <div className="flex items-center space-x-2">

@@ -19,10 +19,6 @@
   }
 }
 
-.scroll-gutter {
-  scrollbar-gutter: stable;
-}
-
 [type="checkbox"] {
   box-sizing: border-box;
   padding: 0;
