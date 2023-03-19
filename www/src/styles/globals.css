@@ -23,11 +23,6 @@
   scrollbar-gutter: stable;
 }
 
-html,
-body {
-  height: 100%;
-}
-
 [type="checkbox"] {
   box-sizing: border-box;
   padding: 0;

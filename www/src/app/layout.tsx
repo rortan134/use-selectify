@@ -1,4 +1,5 @@
 import localFont from "next/font/local";
+import { Inter } from "next/font/google"
 
 import "~/styles/globals.css";
 
@@ -11,10 +12,16 @@ export const metadata = {
   description: "Welcome to Next.js",
 };
 
-const SegoeUI = localFont({
+const segoeUI = localFont({
   src: "../../public/SegoeUI.woff",
   variable: "--font-segoe",
 });
+
+const inter = Inter({
+    subsets: ['latin'],
+    variable: '--font-inter',
+    display: 'swap'
+  });
 
 export default function RootLayout({
   children,
@@ -22,10 +29,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr" className={SegoeUI.variable}>
+    <html lang="en" dir="ltr" className={`${segoeUI.variable} ${inter.variable}`}>
       <Body>
         <Sidebar />
-        <main className="relative h-full w-full">{children}</main>
+        <main className="relative w-full">{children}</main>
         <FloatingButton />
       </Body>
     </html>
