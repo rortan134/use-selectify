@@ -767,7 +767,10 @@ function useSelectify<T extends HTMLElement>(
             if (!exclusionZone) return false;
             const elementsToBeExcluded =
                 typeof exclusionZone === "string" // handle CSS Selectors
-                    ? matchingElementsRef.current
+                    ? findMatchingElements({
+                          scope: ref.current,
+                          matchCriteria: exclusionZone,
+                      })
                     : [exclusionZone].flat(); // Make sure exclusionZone will be an array
 
             if (!elementsToBeExcluded) return false;
@@ -778,7 +781,7 @@ function useSelectify<T extends HTMLElement>(
             );
             return intersectsExclusionZone.length > 0;
         },
-        [exclusionZone, getIntersectedElements]
+        [exclusionZone, findMatchingElements, getIntersectedElements, ref]
     );
 
     const handleDrawRectStart = React.useCallback(
