@@ -73,8 +73,9 @@ yarn add use-selectify
 
 Import the `useSelectify` hook. Both default and named imports are supported.
 
+```tsx
 import { useSelectify } from "use-selectify";
-
+```
 ## Anatomy
 
 ```tsx
@@ -100,6 +101,8 @@ export default () => {
 
 <details>
 <summary>See every prop</summary>
+
+### API Reference
 
 -   `SelectBoxOutlet`: The returned selection box component.
 -   `selectedElements`: A list of every element that has been selected through the hook.
