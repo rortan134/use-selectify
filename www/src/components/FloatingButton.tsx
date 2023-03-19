@@ -15,7 +15,7 @@ export default function FloatingButton() {
       className="hidden md:inline-flex z-50 fixed top-0 right-0 m-1 hover:text-blue-500"
       variant="link"
     >
-      View Code <ExternalLink className="ml-2 h-4 w-4" />
+      View source <ExternalLink className="ml-2 h-4 w-4" />
     </Button>
   ) : null;
 }

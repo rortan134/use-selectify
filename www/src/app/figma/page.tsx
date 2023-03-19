@@ -166,7 +166,7 @@ export default function FigmaDemo() {
           </div>
           <SelectBoxOutlet className="border border-[#0d99ff] bg-[#0d99ff]/20" />
         </div>
-        <aside className="z-10 hidden h-full w-64 border-l border-[#444444] bg-[#2c2c2c] sm:block" />
+        <aside className="z-10 hidden h-full w-72 border-l border-[#444444] bg-[#2c2c2c] md:block" />
       </div>
     </section>
   );

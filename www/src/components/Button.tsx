@@ -6,17 +6,17 @@ import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center rounded-md text-sm hover:bg-slate-800 hover:text-slate-100 focus:ring-offset-slate-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none data-[state=open]:text-slate-100 data-[state=open]:bg-slate-800",
+  "inline-flex items-center rounded-md text-sm focus:ring-offset-slate-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none data-[state=open]:text-slate-50 data-[state=open]:bg-slate-800",
   {
     variants: {
       variant: {
-        default: "text-white bg-slate-50 text-slate-900 dark:text-black",
-        destructive: "bg-red-500 text-white hover:bg-red-600",
-        outline: "bg-transparent border border-slate-200 hover:bg-slate-100",
-        subtle: "bg-slate-100 text-slate-900 hover:bg-slate-200",
+        default: "bg-neutral-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900 hover:bg-neutral-800 hover:text-slate-50 dark:hover:bg-neutral-800 dark:hover:text-slate-50",
+        destructive: "bg-red-500 text-slate-50 hover:bg-red-600",
+        outline: "bg-transparent border border-slate-200 hover:bg-slate-50",
+        subtle: "bg-neutral-800 text-slate-50 hover:bg-neutral-700",
         ghost:
-          "bg-transparent hover:bg-slate-100 dark:hover:bg-neutral-800 dark:text-slate-100 dark:hover:text-slate-100 dark:data-[state=open]:text-slate-900 data-[state=open]:bg-neutral-900 dark:data-[state=open]:bg-white",
-        link: "bg-transparent dark:bg-transparent underline-offset-4 hover:underline text-slate-900 dark:text-slate-100 hover:bg-transparent dark:hover:bg-transparent",
+          "bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800 dark:text-slate-50 dark:hover:text-slate-50 dark:data-[state=open]:text-slate-900 data-[state=open]:bg-neutral-900 dark:data-[state=open]:bg-white",
+        link: "bg-transparent dark:bg-transparent underline-offset-4 hover:underline text-slate-900 dark:text-slate-50 hover:bg-transparent dark:hover:bg-transparent",
       },
       size: {
         default: "h-10 py-2 px-4",

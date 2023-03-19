@@ -6,14 +6,13 @@ import { Button } from "../../components/Button";
 import { Checkbox } from "../../components/Checkbox";
 
 import { cn } from "../../utils/cn";
-import { useSelectify } from "use-selectify";
+import { useSelectify } from "../../../../src";
 
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 export default function TablePage() {
   const [expanded, setExpanded] = React.useState(false);
   const selectionContainerRef = React.useRef(null);
-  const exclusionZoneRef = React.useRef(null);
 
   const {
     SelectBoxOutlet,
@@ -25,11 +24,10 @@ export default function TablePage() {
     mutateSelections,
   } = useSelectify(selectionContainerRef, {
     selectCriteria: "[data-item]",
-    exclusionZone: exclusionZoneRef.current,
+    exclusionZone: "[data-exclude]",
     onDragStart: () => {
-      document.body.style.userSelect = "none";
-
       window.getSelection()?.empty();
+      document.body.style.userSelect = "none";
     },
     onDragEnd: () => {
       document.body.style.userSelect = "";
@@ -61,16 +59,13 @@ export default function TablePage() {
   };
 
   return (
-    <div
-      ref={selectionContainerRef}
-      className="relative h-full w-full"
-    >
+    <div ref={selectionContainerRef} className="relative h-full w-full">
       <div className="container mx-auto py-16 px-2 md:px-8">
-        <div className="mb-16 space-y-3 md:px-12">
-          <h1 className="text-4xl font-semibold text-slate-900 dark:text-white">
+        <div data-exclude className="mb-14 space-y-3 md:px-16">
+          <h1 className="text-4xl font-semibold text-slate-900 dark:text-slate-50">
             Datatable
           </h1>
-          <p className="text-lg text-slate-900 dark:text-slate-300">
+          <p className="text-lg text-slate-900 dark:text-neutral-400">
             A table with drag-selection integrated for easier bulk actions.
             <br />
             Built using{" "}
@@ -96,17 +91,21 @@ export default function TablePage() {
           <div className="flex-1 pr-4">
             <div className="relative md:w-1/3">
               <Input type="search" placeholder="Search..." className="pl-10" />
-              <div className="absolute top-0 left-0 inline-flex items-center p-2">
-                <Search className="h-6 w-6 text-slate-400" />
-              </div>
+              <Search className="absolute left-0 top-1/2 ml-3 h-5 w-5 -translate-y-1/2 text-neutral-400" />
             </div>
           </div>
-          <Button variant="destructive" disabled={!hasSelected}>
-            Delete
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New entry
+            </Button>
+            <Button variant="destructive" disabled={!hasSelected}>
+              Delete
+            </Button>
+          </div>
         </div>
         <div
-          ref={exclusionZoneRef}
+          data-exclude
           className={cn(
             "relative overflow-x-auto overflow-y-auto rounded-lg bg-neutral-900 shadow",
             {
@@ -163,21 +162,21 @@ export default function TablePage() {
               ))}
             </tbody>
           </table>
-          <div className="sticky bottom-0 w-full bg-gradient-to-t from-neutral-900 py-1">
+          <div className="sticky bottom-0 w-full bg-gradient-to-t from-neutral-900 pt-1 pb-4">
             <div className="flex w-full justify-center">
               <Button
-                variant="ghost"
+                variant="subtle"
                 size="sm"
                 onClick={() => setExpanded((prevState) => !prevState)}
               >
                 {!expanded ? (
                   <>
-                    <ChevronDown className="mr-2 h-4 w-4" />
+                    <ChevronDown className="mr-1 h-4 w-4" />
                     Expand
                   </>
                 ) : (
                   <>
-                    <ChevronUp className="mr-2 h-4 w-4" />
+                    <ChevronUp className="mr-1 h-4 w-4" />
                     Collapse
                   </>
                 )}
