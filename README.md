@@ -1,4 +1,4 @@
-![useSelectify](https://raw.githubusercontent.com/rortan134/use-selectify/master/.github/assets/use-selectify-banner.png)
+![use-selectify cover image](https://raw.githubusercontent.com/rortan134/use-selectify/master/.github/assets/use-selectify-banner.png)
 
 <h1 align="center">use-selectify</h1>
 
@@ -31,14 +31,15 @@
 
 ## Introduction
 
-Drag interactions are one of the most challenging aspects of the web. Having full control over the exact behavior of those interactions is essential, yet most available libraries out there feel like they are still not up to the task.
+Drag interactions are one of the most challenging aspects of the web. Having complete control over the exact behavior of those interactions is essential, yet most available libraries out there still feel like they are not up to the task.
 
 Recognizing this need, `use-selectify` was created aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
 
 Demo & Examples: Work in progress...
+
 <!-- Demo & Examples: [use-selectify.js.org](https://use-selectify.js.org/) -->
 
-## Features
+## Key Features
 
 ✅ Automatic window scrolling
 
@@ -52,11 +53,11 @@ Demo & Examples: Work in progress...
 
 ✅ Works on every device
 
-✅ SSR support
-
-✅ TypeScript-First
+✅ SSR & Lazy loading support
 
 ## Installation
+
+Install use-selectify from your terminal via npm or yarn.
 
 ```sh
 npm install use-selectify
@@ -68,11 +69,15 @@ or
 yarn add use-selectify
 ```
 
+### Import it
+
+Import the `useSelectify` hook. Both default and named imports are supported.
+
+import { useSelectify } from "use-selectify";
+
 ## Anatomy
 
 ```tsx
-import { useSelectify } from "use-selectify";
-
 export default () => {
     const {
         SelectBoxOutlet,
@@ -106,7 +111,7 @@ export default () => {
 -   `clearSelection`: An utility function that will unselect every selected element.
 -   `mutateSelections`: An utility function, similar to a [setState](https://beta.reactjs.org/reference/react/useState), that allows you to modify internal selections.
 -   `cancelSelectionBox`: An utility function that will instantly cancel the drag-selection without selecting any element.
--   `options`: A copy of the internal hook options.
+-   `options`: A copy of the hook options.
 </details>
 
 ## Getting Started
@@ -153,12 +158,37 @@ export default function App() {
 
     return (
         <div ref={selectionContainerRef} style={{ position: "relative" }}>
-            <div class="select-this">Hello World</div>
+            <div className="select-this">Hello World</div>
             <div>I won't be selected</div>
             <SelectBoxOutlet />
         </div>
     );
 }
+```
+
+### Exclusion Zone
+
+In order to prevent selection starting from anywhere inside your container, you can also specify an exclusion zone. It supports both `Element`s (such as React refs) or [CSS Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors).
+
+```tsx
+const selectionContainerRef = React.useRef(null);
+const exclusionZoneRef = React.useRef(null);
+
+const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
+    exclusionZone: exclusionZoneRef.current,
+});
+
+return (
+    <div ref={selectionContainerRef} style={{ position: "relative" }}>
+        <div>
+            <p>Selection can start from here</p>
+        </div>
+        <div ref={exclusionZoneRef}>
+            <p>But not from here</p>
+        </div>
+        <SelectBoxOutlet />
+    </div>
+);
 ```
 
 <details>
@@ -190,7 +220,7 @@ const { SelectBoxOutlet } = useSelectify(selectionContainerRef, {
 
 ### Styling
 
-By default the selection box comes with some styling. You can override the className prop and specify how you want your selection box to look through the Outlet Component. For Styled Components or Stitches see [how to render your own selection box](#other-use-cases).
+By default the selection box comes with some styling. You can override it with the `className` prop and specify how you want your selection box to look through the Outlet Component. For Styled Components or Stitches see [how to render your own selection box](#other-use-cases).
 
 > **Note**
 >
@@ -213,28 +243,30 @@ Available default themes: `default` | `outline`
 
 ### Mapping reactive components without a callback
 
+We can check if an element is selected by passing the `selectedElements` down and simply looping accordingly:
+
 ```tsx
 import * as React from "react";
 import { useSelectify } from "use-selectify";
 
-const users = [
+const data = [
     {
         id: 1,
         name: "foo",
         role: "admin",
     },
     {
-        id: 1,
+        id: 2,
         name: "bar",
         role: "editor",
     },
     {
-        id: 1,
+        id: 3,
         name: "foo-bar",
         role: "author",
     },
     {
-        id: 1,
+        id: 4,
         name: "bar-foo",
         role: "author",
     },
@@ -257,15 +289,17 @@ const ListItem = ({
     );
 };
 
-export const List = ({ children }: { children: React.ReactNode }) => {
+export const List = () => {
     const containerRef = React.useRef(null);
     const { SelectBoxOutlet, selectedElements } = useSelectify(selectionContainerRef);
 
     return (
         <div ref={containerRef} className="container">
             <ul className="list">
-                {users.map((user) => (
-                    <ListItem selectedElements={selectedElements}>{user.name}</ListItem>
+                {data.map((user) => (
+                    <ListItem key={user.id} selectedElements={selectedElements}>
+                        {user.name}
+                    </ListItem>
                 ))}
             </ul>
             <SelectBoxOutlet />
@@ -432,8 +466,8 @@ export function App() {
 | activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag.                                                      |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                       |
-| exclusionZone           | Element \| Element[] \| string                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
-| scrollContext            | HTMLElement \| Window                                                  | `window`            | Sets the scrollable element for the automatic window scrolling to react.                                                       |
+| exclusionZone           | Element \| Element[] \| string                           | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
+| scrollContext           | HTMLElement \| Window                                    | `window`         | Sets the scrollable element for the automatic window scrolling to react.                                                                                |
 | exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
 | lazyLoad                | boolean                                                  | false            | Defers loading the selection box.                                                                                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
@@ -481,6 +515,10 @@ Although we support touch interactions, it should be considered the conflict of 
 ### Does this support React Native?
 
 No, not currently.
+
+<hr/>
+
+Looking forward to seeing how this project and the community evolve and provide feedback. Whether it's a feature request, bug report, or a project to showcase, feel free to get involved!
 
 ## Development
 
