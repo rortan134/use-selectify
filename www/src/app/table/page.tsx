@@ -6,7 +6,7 @@ import { Button } from "../../components/Button";
 import { Checkbox } from "../../components/Checkbox";
 
 import { cn } from "../../utils/cn";
-import { useSelectify } from "../../../../src";
+import { useSelectify } from "use-selectify";
 
 import { Search, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
