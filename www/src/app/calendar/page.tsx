@@ -45,12 +45,12 @@ const scheduledEvents: CalendarEvent[] = [
   {
     date: new Date(`${new Date().getMonth()} 28 2023`),
     label: "Meeting with Julia",
-    time: "14:00 - 15:00",
+    time: "11:00 - 11:30",
   },
   {
     date: new Date(`${new Date().getMonth() + 1} 6 2023`),
     label: "Brainstorming",
-    time: "14:00 - 15:00",
+    time: "10:00 - 11:00",
   },
   {
     date: new Date(`${new Date().getMonth() + 1} 12 2023`),
@@ -60,12 +60,12 @@ const scheduledEvents: CalendarEvent[] = [
   {
     date: new Date(`${new Date().getMonth() + 1} 16 2023`),
     label: "Project overview",
-    time: "14:00 - 15:00",
+    time: "9:00 - 11:00",
   },
   {
     date: new Date(`${new Date().getMonth() + 1} 24 2023`),
     label: "Standup #2",
-    time: "14:00 - 15:00",
+    time: "12:00 - 12:30",
   },
 ];
 
@@ -308,12 +308,9 @@ const DayBlock = ({
         "ease h-40 w-10 border border-neutral-700/50 p-1 transition hover:z-10 hover:bg-neutral-800 hover:shadow-lg",
         {
           "border-blue-600 bg-blue-600/20 shadow-lg hover:bg-blue-600/25":
-            isElementSelected || isInSelectedDateRange,
+            isInSelectedDateRange,
           "bg-zinc-900 opacity-50 hover:opacity-100":
-            !isInCurrentMonth &&
-            !isElementSelected &&
-            !isEventSelected &&
-            !isInSelectedDateRange,
+            !isInCurrentMonth && !isEventSelected && !isInSelectedDateRange,
         }
       )}
     >
