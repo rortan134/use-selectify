@@ -135,7 +135,7 @@ export default function Sidebar() {
               Community
             </h2>
             <Button
-              href="https://github.com/rortan134/use-selectify/issues/new"
+              href="https://twitter.com/meetgilberto"
               target="_blank"
               variant="ghost"
             >
