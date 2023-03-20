@@ -64,6 +64,10 @@ export const metadata: Metadata = {
     canonical: "https://useselectify.js.org",
   },
   category: "technology",
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 const segoeUI = localFont({
