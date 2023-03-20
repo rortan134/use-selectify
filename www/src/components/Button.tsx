@@ -56,24 +56,23 @@ export interface ButtonProps
 const Button = React.forwardRef<
   HTMLButtonElement | HTMLAnchorElement,
   ButtonProps
->(
-  (
-    { href, disabled, className, variant, size, ...props }: ButtonProps,
-    ref
-  ) => {
-    const classes = cn(buttonVariants({ variant, size, className }));
-    return href && !disabled ? (
-      <Link href={href} className={classes} ref={ref} {...props} />
-    ) : (
-      <button
-        className={classes}
-        disabled={disabled}
-        ref={ref as React.Ref<HTMLButtonElement>}
-        {...props}
-      />
-    );
-  }
-);
+>(({ href, className, variant, size, ...props }: ButtonProps, ref) => {
+  const classes = cn(buttonVariants({ variant, size, className }));
+  return href ? (
+    <Link
+      href={href}
+      className={classes}
+      ref={ref as React.Ref<HTMLAnchorElement>}
+      {...props}
+    />
+  ) : (
+    <button
+      className={classes}
+      ref={ref as React.Ref<HTMLButtonElement>}
+      {...props}
+    />
+  );
+});
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
