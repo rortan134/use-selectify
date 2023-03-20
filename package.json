@@ -20,7 +20,7 @@
     "bugs": {
         "url": "https://github.com/rortan134/use-selectify/issues"
     },
-    "homepage": "https://github.com/rortan134/use-selectify#readme",
+    "homepage": "https://useselectify.js.org",
     "license": "MIT",
     "sideEffects": false,
     "files": [
@@ -31,15 +31,16 @@
     "module": "./dist/use-selectify.es.js",
     "types": "./dist/index.d.ts",
     "scripts": {
-        "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
-        "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
-        "lint:fix": "eslint --fix src/**/*.{jsx,ts,tsx}",
-        "format": "prettier --write src//**/*.{ts,tsx,css} --config ./.prettierrc",
-        "clean": "rm -rf dist",
-        "preversion": "yarn clean && yarn lint:fix",
-        "version": "yarn build",
+        "clean": "rm -rf ./dist",
+        "lint-eslint": "eslint ./src --ext js,jsx,ts,tsx --max-warnings=0 --config .eslintrc.json --no-eslintrc",
+        "lint": "run-p lint-eslint prettier:check",
+        "lint:fix": "pnpm prettier:fix && eslint ./src --ext js,jsx,ts,tsx --fix --max-warnings=0 --config .eslintrc.json --no-eslintrc",
+        "lint-staged": "lint-staged",
+        "prettier:check": "prettier --check ./src",
+        "prettier:fix": "prettier --write ./src",
+        "version": "pnpm build",
         "prepare": "husky install",
         "storybook": "start-storybook -p 6006",
         "build-storybook": "build-storybook"
@@ -60,14 +61,15 @@
         "@types/node": "^18.15.3",
         "@types/react": "^18.0.27",
         "@types/react-dom": "^18.0.11",
-        "@typescript-eslint/eslint-plugin": "^5.55.0",
-        "@typescript-eslint/parser": "^5.55.0",
+        "@typescript-eslint/eslint-plugin": "^5.56.0",
+        "@typescript-eslint/parser": "^5.56.0",
         "@vitejs/plugin-react": "^3.1.0",
         "@vitejs/plugin-react-swc": "^3.2.0",
         "autoprefixer": "^10.4.14",
         "babel-loader": "^9.1.2",
         "eslint": "^8.36.0",
-        "eslint-config-prettier": "^8.7.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-import-resolver-typescript": "^3.5.3",
         "eslint-plugin-import": "^2.25.3",
         "eslint-plugin-jsx-a11y": "^6.5.1",
         "eslint-plugin-prettier": "^4.2.1",
@@ -77,14 +79,15 @@
         "eslint-plugin-storybook": "^0.6.11",
         "husky": "^8.0.3",
         "lint-staged": "^13.2.0",
+        "npm-run-all": "^4.1.5",
         "postcss": "^8.4.21",
         "postcss-loader": "^7.1.0",
-        "prettier": "^2.8.3",
+        "prettier": "^2.8.5",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-hooks": "^1.0.1",
         "typescript": "^5.0.2",
-        "vite": "^4.2.0",
+        "vite": "^4.2.1",
         "vite-plugin-dts": "^2.1.0",
         "vite-plugin-linter": "^2.0.2",
         "vite-tsconfig-paths": "^4.0.7"
@@ -105,8 +108,11 @@
     },
     "lint-staged": {
         "src/**/*.{js,jsx,ts,tsx}": [
-            "yarn lint:fix",
-            "yarn format"
+            "pnpm lint"
         ]
-    }
+    },
+    "engines": {
+        "node": ">=16.18.0"
+    },
+    "packageManager": "pnpm@7.24.3"
 }
