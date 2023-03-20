@@ -279,7 +279,7 @@ function useSelectify<T extends HTMLElement>(
 ) {
     const {
         selectCriteria = DEFAULT_SELECT_CRITERIA,
-        maxSelections = false,
+        maxSelections,
         autoScroll = true,
         autoScrollEdgeDistance = 100,
         autoScrollStep = 30,
@@ -817,12 +817,6 @@ function useSelectify<T extends HTMLElement>(
                     y: event.clientY - parentNodeRectRef.current.top,
                 };
 
-                // Check for elements that can be selected
-                matchingElementsRef.current = findMatchingElements({
-                    scope: ref.current,
-                    matchCriteria: selectCriteria,
-                });
-
                 if (await isInExclusionZone(eventStartingPoint)) {
                     return;
                 }
@@ -854,7 +848,6 @@ function useSelectify<T extends HTMLElement>(
             activateOnKey,
             activateOnMetaKey,
             disabled,
-            findMatchingElements,
             handleDrawRectUpdate,
             handleEscapeKeyCancel,
             handleScroll,
@@ -862,7 +855,6 @@ function useSelectify<T extends HTMLElement>(
             isMultitouchActive,
             ownerDocument,
             ref,
-            selectCriteria,
             triggerOnDragStart,
         ]
     );
