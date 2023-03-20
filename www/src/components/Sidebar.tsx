@@ -31,7 +31,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "md:sticky border-b border-neutral-600 md:border-none md:max-h-screen scrollbar-thin top-0 h-fit w-full scrollbar-thumb-neutral-100 dark:scrollbar-thumb-neutral-200/10 scrollbar-track-transparent space-y-8 overflow-x-hidden py-2 font-inter tracking-tight transition-colors md:w-72 px-3 md:px-1 md:py-5",
+        "top-0 h-fit w-full space-y-8 overflow-x-hidden border-b border-neutral-600 py-2 px-3 font-inter tracking-tight transition-colors scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-100 dark:scrollbar-thumb-neutral-200/10 md:sticky md:max-h-screen md:w-72 md:border-none md:px-1 md:py-5",
         {
           "bg-[#2c2c2c]": currRoute === "/figma",
         }
@@ -56,26 +56,20 @@ export default function Sidebar() {
               </p>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full">
+          <DropdownMenuContent>
             <DropdownMenuLabel>Assets</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Button
-                  href="/logo.svg"
-                  variant="link"
-                  className="text-white"
-                  download
-                >
+              <DropdownMenuItem asChild>
+                <Button href="/logo.svg" variant="link" download>
                   <Download className="mr-2 h-4 w-4" />
                   Download Logo
                 </Button>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Button
                   href="/use-selectify-banner.png"
                   variant="link"
-                  className="text-white"
                   download
                 >
                   <Download className="mr-2 h-4 w-4" />

@@ -34,7 +34,6 @@ export const routes: AppRoute[] = [
     route: "/calendar",
     themeColor: "#131313",
     code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/calendar/page.tsx",
-    disabled: true,
   },
   {
     name: "Notion Demo",

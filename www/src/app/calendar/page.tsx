@@ -1,13 +1,24 @@
+/**
+ * Proof of concept
+ */
+
 "use client";
 import * as React from "react";
 
 import { Button } from "../../components/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/DropdownMenu";
 
 import useEventListener from "../../utils/useEventListener";
-import { useSelectify } from "use-selectify";
+import { useSelectify } from "../../../../src";
 import { cn } from "../../utils/cn";
 
-import { ChevronDown, Plus, ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
 
 interface CalendarEvent {
   date: Date;
@@ -18,7 +29,6 @@ interface CalendarEvent {
 interface CalendarDay {
   date: Date;
   events: CalendarEvent[];
-  block: Element | undefined | null;
 }
 
 const weekDays = [
@@ -33,8 +43,28 @@ const weekDays = [
 
 const scheduledEvents: CalendarEvent[] = [
   {
-    date: new Date("March 20 2023"),
+    date: new Date(`${new Date().getMonth()} 28 2023`),
+    label: "Meeting with Julia",
+    time: "14:00 - 15:00",
+  },
+  {
+    date: new Date(`${new Date().getMonth() + 1} 6 2023`),
+    label: "Brainstorming",
+    time: "14:00 - 15:00",
+  },
+  {
+    date: new Date(`${new Date().getMonth() + 1} 12 2023`),
     label: "Meeting with Mark",
+    time: "14:00 - 15:00",
+  },
+  {
+    date: new Date(`${new Date().getMonth() + 1} 16 2023`),
+    label: "Project overview",
+    time: "14:00 - 15:00",
+  },
+  {
+    date: new Date(`${new Date().getMonth() + 1} 24 2023`),
+    label: "Standup #2",
     time: "14:00 - 15:00",
   },
 ];
@@ -44,15 +74,12 @@ export default function CalendarPage() {
   const [selectionCriteria, setSelectionCriteria] =
     React.useState("[data-event]");
 
-  const {
-    SelectBoxOutlet,
-    hasSelected,
-    selectedElements,
-    mutateSelections,
-    getSelectableElements,
-  } = useSelectify(selectionContainerRef, {
-    selectCriteria: selectionCriteria,
-  });
+  const { SelectBoxOutlet, hasSelected, selectedElements } = useSelectify(
+    selectionContainerRef,
+    {
+      selectCriteria: selectionCriteria,
+    }
+  );
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey) setSelectionCriteria("[data-calendarday]");
@@ -77,47 +104,38 @@ export default function CalendarPage() {
     const startDate = new Date(sortedDates[0] ?? "");
     const endDate = new Date(sortedDates[sortedDates.length - 1] ?? "");
 
-    const range: CalendarDay[] = [];
+    const range: Date[] = [];
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const currentDayBlock: CalendarDay | undefined = selectedCalendarDays.find(
-        (calendarDay) => calendarDay.date.getTime() === currentDate.getTime()
-      );
-      if (currentDayBlock) range.push(currentDayBlock);
+      range.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return range;
   }, [hasSelected, selectedCalendarDays]);
 
-//   React.useEffect(() => {
-//     console.log(selectedDateRange);
-//   }, [selectedDateRange]);
-
-  /* ---------------------------------------------------------------------------------------------- */
+  /* -------------------------------------------------------------------------------------------------
+   * Calendar Logic
+   * -----------------------------------------------------------------------------------------------*/
 
   const currDate = React.useMemo(() => new Date(), []);
-
   const firstDayOfCurrentMonth = new Date(
     currDate.getFullYear(),
     currDate.getMonth(),
     1
   ).getDay();
-
   const lastDayOfPreviousMonth = new Date(
     currDate.getFullYear(),
     currDate.getMonth(),
     0
   ).getDate();
-
   const firstEmptyCells = (firstDayOfCurrentMonth + 7) % 7;
   const lastEmptyCells = (lastDayOfPreviousMonth + 7) % 7;
 
   const daysInCurrentMonth = React.useMemo(() => {
     const month = currDate.getMonth();
     const year = currDate.getFullYear();
-
     return Array.from(
       { length: new Date(year, month, 0).getDate() },
       (_, i) => new Date(year, month, i + 1)
@@ -127,7 +145,6 @@ export default function CalendarPage() {
   const daysInPreviousMonth = React.useMemo(() => {
     const month = currDate.getMonth() - 1;
     const year = currDate.getFullYear();
-
     return Array.from(
       { length: firstEmptyCells },
       (_, i) =>
@@ -138,12 +155,10 @@ export default function CalendarPage() {
   const daysInFollowingMonth = React.useMemo(() => {
     const month = currDate.getMonth() + 1;
     const year = currDate.getFullYear();
-
     const allPreviousDays = [...daysInPreviousMonth, ...daysInCurrentMonth];
     const rowsAmount = Math.ceil(allPreviousDays.length / 7);
     const daysInMonth = new Date(year, month, 0).getDate();
     const daysToShow = rowsAmount * 7 - daysInMonth - lastEmptyCells;
-
     return Array.from(
       { length: daysToShow },
       (_, i) => new Date(year, month, i + 1)
@@ -157,71 +172,56 @@ export default function CalendarPage() {
       ...daysInFollowingMonth,
     ];
     const rowsAmount = Math.ceil(allDays.length / 7);
-
     return Array.from({ length: rowsAmount }, (_, i) =>
       allDays.slice(i * 7, i * 7 + 7)
     );
   }, [daysInCurrentMonth, daysInFollowingMonth, daysInPreviousMonth]);
 
+  const weeksWithEvents = React.useMemo(
+    () =>
+      weekRows.map(
+        (week) =>
+          week.map((date) => ({
+            date,
+            events: scheduledEvents.filter(
+              (event) => event.date.toDateString() === date.toDateString()
+            ),
+          })) as CalendarDay[]
+      ),
+    [weekRows]
+  );
+
+  /* ---------------------------------------------------------------------------------------------- */
+
   return (
     <div className="container mx-auto py-16 px-2 md:px-8">
-      <div className="mb-16 space-y-3 md:px-12">
-        <h1 className="text-4xl font-semibold text-slate-900 dark:text-white">
+      <div className="mb-14 space-y-3 md:px-16">
+        <h1 className="text-4xl font-semibold text-slate-900 dark:text-slate-50">
           Calendar
         </h1>
-        <p className="text-lg text-slate-900 dark:text-slate-300">
+        <p className="text-lg text-slate-900 dark:text-neutral-400">
           A calendar with date range selection handled by use-selectify.
         </p>
         <p className="text-base text-slate-900 dark:text-zinc-500">
           Drag to select events, ctrl + drag to select days.
         </p>
       </div>
-      <div className="w-full rounded-lg bg-neutral-900 p-4 shadow">
-        <div className="flex items-center justify-between rounded-t-lg bg-neutral-900 py-4 px-8">
-          <h4 className="text-2xl font-semibold capitalize text-slate-50">
-            {currDate.toLocaleDateString([], { month: "long" })}{" "}
-            {currDate.getFullYear()}
-          </h4>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <Button variant="ghost" size="sm">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                Today
-              </Button>
-              <Button variant="ghost" size="sm">
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              className="border border-neutral-700"
-              size="sm"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              View
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      <div className="w-full rounded-lg bg-neutral-900 shadow md:p-6">
+        <CalendarInteractions />
         <div className="relative h-full w-full">
           <table
             ref={selectionContainerRef}
-            className="w-full table-fixed border-collapse select-none rounded-lg bg-neutral-800"
+            className="whitespace-no-wrap relative w-full table-fixed border-collapse select-none rounded-lg bg-neutral-800"
           >
             <TableHeader />
             <tbody>
-              {weekRows.map((weekDays, i) => (
-                <tr key={i} className="h-20 text-center">
-                  {weekDays.map((weekDay, j) => (
+              {weeksWithEvents.map((weekDays, i) => (
+                <tr key={i} className="h-16 text-center">
+                  {weekDays.map((weekDay) => (
                     <DayBlock
-                      key={j}
-                      calendarDay={{
-                        date: weekDay,
-                        events: [],
-                        block: null,
-                      }}
+                      key={weekDay.date.getTime()}
+                      calendarDay={weekDay}
+                      selectedDateRange={selectedDateRange}
                       selectedElements={selectedElements}
                       setSelectedCalendarDays={setSelectedCalendarDays}
                     />
@@ -241,42 +241,19 @@ export default function CalendarPage() {
   );
 }
 
-const TableHeader = () => {
-  const dayDate = new Date().getDay();
-  const currDay = weekDays[dayDate];
-
-  return (
-    <thead>
-      <tr>
-        {weekDays.map((day, i) => (
-          <th
-            key={i}
-            className={cn(
-              "lg:w-30 md:w-30 h-10 w-10 py-4 px-2 text-xs font-medium text-zinc-400 sm:w-20 xl:text-sm"
-            )}
-          >
-            <span
-              className={cn({
-                "rounded-lg bg-slate-50 px-3 py-1.5 font-semibold text-slate-900":
-                  day === currDay,
-              })}
-            >
-              {day.slice(0, 3)}
-            </span>
-          </th>
-        ))}
-      </tr>
-    </thead>
-  );
-};
+/* -------------------------------------------------------------------------------------------------
+ * DayBlock
+ * -----------------------------------------------------------------------------------------------*/
 
 const DayBlock = ({
   calendarDay,
   selectedElements,
+  selectedDateRange,
   setSelectedCalendarDays,
 }: {
   calendarDay: CalendarDay;
   selectedElements: Element[];
+  selectedDateRange: Date[];
   setSelectedCalendarDays: React.Dispatch<React.SetStateAction<CalendarDay[]>>;
 }) => {
   const dayRef = React.useRef(null);
@@ -286,14 +263,22 @@ const DayBlock = ({
     calendarDay.date.toLocaleDateString([], { day: "numeric" })
   );
 
-  const isCurrentMonth = React.useMemo(
+  const isInCurrentMonth = React.useMemo(
     () =>
       currDate.getMonth() === calendarDay.date.getMonth() &&
       currDate.getFullYear() === calendarDay.date.getFullYear(),
     [calendarDay.date, currDate]
   );
 
-  const isDaySelected = dayRef.current
+  const isInSelectedDateRange = React.useMemo(
+    () =>
+      selectedDateRange
+        .map((date) => date.getTime())
+        .includes(calendarDay.date.getTime()),
+    [calendarDay.date, selectedDateRange]
+  );
+
+  const isElementSelected = dayRef.current
     ? selectedElements.includes(dayRef.current)
     : false;
 
@@ -302,41 +287,48 @@ const DayBlock = ({
     : false;
 
   React.useEffect(() => {
-    if (isDaySelected) {
-      setSelectedCalendarDays((prevState) => [
-        ...prevState,
-        {
-          ...calendarDay,
-          block: dayRef.current,
-        },
+    // Pass `Date` data up when the day is selected or deselected
+    if (isElementSelected) {
+      setSelectedCalendarDays((prevCalendarDays) => [
+        ...prevCalendarDays,
+        calendarDay,
       ]);
+    } else {
+      setSelectedCalendarDays((calendarDays) =>
+        calendarDays.filter((day) => day !== calendarDay)
+      );
     }
-  }, [isDaySelected, setSelectedCalendarDays]);
+  }, [isElementSelected, setSelectedCalendarDays]);
 
   return (
     <td
       data-calendarday
       ref={dayRef}
       className={cn(
-        "lg:w-30 md:w-30 ease h-40 w-10 border border-neutral-700/50 p-1 transition hover:z-10 hover:bg-neutral-800 hover:shadow-lg sm:w-20",
+        "ease h-40 w-10 border border-neutral-700/50 p-1 transition hover:z-10 hover:bg-neutral-800 hover:shadow-lg",
         {
           "border-blue-600 bg-blue-600/20 shadow-lg hover:bg-blue-600/25":
-            isDaySelected,
+            isElementSelected || isInSelectedDateRange,
           "bg-zinc-900 opacity-50 hover:opacity-100":
-            !isCurrentMonth && !isDaySelected,
+            !isInCurrentMonth &&
+            !isElementSelected &&
+            !isEventSelected &&
+            !isInSelectedDateRange,
         }
       )}
     >
-      <div className="lg:w-30 md:w-30 mx-auto flex h-40 w-10 flex-col overflow-hidden p-2 sm:w-full">
-        <div className="h-30 w-full flex-grow py-1">
+      <div className="flex h-full w-full flex-col overflow-hidden p-2">
+        <div className="h-full w-full flex-grow py-1">
           {calendarDay.events.map((event, i) => (
             <div
-              data-event
               key={i}
+              ref={eventRef}
+              data-event
               className={cn(
-                "flex cursor-pointer flex-col rounded border border-transparent bg-slate-400/20 px-4 py-2 text-left text-sm shadow transition-colors hover:border-neutral-600 hover:bg-slate-400/30",
+                "flex cursor-pointer flex-col rounded border border-transparent bg-slate-400/20 py-1 px-3 text-left text-xs shadow transition-colors hover:border-neutral-600 hover:bg-slate-400/30",
                 {
-                  "bg-slate-400/70": isEventSelected,
+                  "border-blue-600 bg-blue-500/25 hover:border-blue-700 hover:bg-blue-500/40":
+                    isEventSelected,
                 }
               )}
             >
@@ -359,5 +351,83 @@ const DayBlock = ({
         </div>
       </div>
     </td>
+  );
+};
+
+const CalendarInteractions = () => {
+  const currDate = React.useMemo(() => new Date(), []);
+
+  return (
+    <div className="flex items-center justify-between rounded-t-lg bg-neutral-900 p-4 md:px-8">
+      <h4 className="text-2xl font-semibold capitalize text-slate-50">
+        {currDate.toLocaleDateString([], { month: "long" })}{" "}
+        {currDate.getFullYear()}
+      </h4>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="sm">
+            Today
+          </Button>
+          <Button variant="ghost" size="sm">
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="border border-neutral-700"
+              size="sm"
+            >
+              <ChevronDown className="mr-1 h-5 w-5" />
+              View
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuGroup>
+              <DropdownMenuItem>Weekly</DropdownMenuItem>
+              <DropdownMenuItem>Monthly</DropdownMenuItem>
+              <DropdownMenuItem>Yearly</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * TableHeader
+ * -----------------------------------------------------------------------------------------------*/
+
+const TableHeader = () => {
+  const dayDate = new Date().getDay();
+  const currDay = weekDays[dayDate];
+
+  return (
+    <thead>
+      <tr>
+        {weekDays.map((day, i) => (
+          <th
+            key={i}
+            className={cn(
+              "md:w-30 h-10 w-10 py-4 px-2 text-xs font-medium text-zinc-400 sm:w-20 xl:text-sm"
+            )}
+          >
+            <span
+              className={cn({
+                "rounded-lg bg-slate-50 px-3 py-1.5 font-semibold text-slate-900":
+                  day === currDay,
+              })}
+            >
+              {day.slice(0, 3)}
+            </span>
+          </th>
+        ))}
+      </tr>
+    </thead>
   );
 };
