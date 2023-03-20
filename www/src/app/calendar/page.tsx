@@ -15,7 +15,7 @@ import {
 } from "../../components/DropdownMenu";
 
 import useEventListener from "../../utils/useEventListener";
-import { useSelectify } from "../../../../src";
+import { useSelectify } from "use-selectify";
 import { cn } from "../../utils/cn";
 
 import { ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
