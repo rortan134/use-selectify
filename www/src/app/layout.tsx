@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Inter } from "next/font/google"
+import { Inter } from "next/font/google";
 
 import "~/styles/globals.css";
 
@@ -7,9 +8,62 @@ import Sidebar from "../components/Sidebar";
 import FloatingButton from "../components/FloatingButton";
 import Body from "./Body";
 
-export const metadata = {
-  title: "use-selectify Demo - The Ultimate Drag-to-Select Solution for React",
-  description: "Welcome to Next.js",
+export const metadata: Metadata = {
+  title: "The Ultimate Drag-to-Select Solution for React | use-selectify",
+  description: "The Ultimate Drag-to-Select Solution for React",
+  generator: "use-selectify",
+  applicationName: "use-selectify",
+  keywords: ["Drag", "Interactivity", "React", "JavaScript"],
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      {
+        url: "/logo.png",
+      },
+      {
+        url: "/favicon-16x16.png",
+        sizes: "16x16",
+      },
+      {
+        url: "/favicon-32x32.png",
+        sizes: "32x32",
+      },
+    ],
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "120x120",
+    },
+  },
+  themeColor: "#131313",
+  openGraph: {
+    title: "The Ultimate Drag-to-Select Solution for React | use-selectify",
+    description: "The Ultimate Drag-to-Select Solution for React",
+    url: "https://useselectify.js.org",
+    siteName: "use-selectify",
+    images: [
+      {
+        url: "https://useselectify.js.org/use-selectify-banner.png",
+        width: 1200,
+        height: 675,
+        alt: "use-selectify cover",
+      },
+    ],
+    locale: "en-US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@meetgilberto",
+  },
+  alternates: {
+    canonical: "https://useselectify.js.org",
+  },
+  category: "technology",
 };
 
 const segoeUI = localFont({
@@ -18,10 +72,10 @@ const segoeUI = localFont({
 });
 
 const inter = Inter({
-    subsets: ['latin'],
-    variable: '--font-inter',
-    display: 'swap'
-  });
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -29,7 +83,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr" className={`${segoeUI.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      dir="ltr"
+      className={`${segoeUI.variable} ${inter.variable}`}
+    >
       <Body>
         <Sidebar />
         <main className="relative w-full px-3">{children}</main>
