@@ -18,7 +18,7 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "incremental": true,
-        // "noUncheckedIndexedAccess": true,
+        "noUncheckedIndexedAccess": true,
         "declarationMap": true,
         "strictNullChecks": true,
         "baseUrl": ".",
