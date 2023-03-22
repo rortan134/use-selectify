@@ -71,6 +71,7 @@
 .table-list {
     display: flex;
     flex-direction: column;
+    margin: 64rem 0;
 }
 
 .table-list div:last-child {
