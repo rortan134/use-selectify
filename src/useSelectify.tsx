@@ -67,8 +67,8 @@ SelectionLabel.displayName = SELECT_LABEL_NAME;
  * SelectionBox
  * -----------------------------------------------------------------------------------------------*/
 
-const SELECT_BOX_NAME = "SelectionBoxOutlet";
-const SELECT_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
+const SELECTION_BOX_NAME = "SelectionBoxOutlet";
+const SELECTION_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 
 export type Theme = "default";
 
@@ -125,7 +125,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
             <div
                 {...selectBoxProps}
                 ref={forwardedRef}
-                id={SELECT_BOX_IDENTIFIER}
+                id={SELECTION_BOX_IDENTIFIER}
                 role="region"
                 tabIndex={-1}
                 aria-labelledby={boxId}
@@ -148,7 +148,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
     }
 );
 
-SelectionBox.displayName = SELECT_BOX_NAME;
+SelectionBox.displayName = SELECTION_BOX_NAME;
 
 function promiseWrapper(promise: { default: React.ComponentType<any> }): Promise<{
     default: React.ComponentType<any>;
@@ -387,7 +387,7 @@ function useSelectify<T extends HTMLElement>(
 
             // Filter out the selection box element to not include it in the response
             const filteredMatchingElements = matchingElements.filter(
-                (el) => el.id !== SELECT_BOX_IDENTIFIER
+                (el) => el.id !== SELECTION_BOX_IDENTIFIER
             );
 
             return maxSelections
@@ -442,7 +442,7 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getBoundingClientRectsAsync = React.useCallback(
-        (elements: readonly Element[]): Promise<BoxBoundingPosition[]> =>
+        (elements: readonly Element[]): Promise<DOMRectReadOnly[]> =>
             new Promise((resolve) => {
                 resolve(observedRectsRef.current);
                 elements.forEach((element) => observer?.observe(element));
@@ -452,19 +452,17 @@ function useSelectify<T extends HTMLElement>(
 
     const getIntersectedElements = React.useCallback(
         async (intersectionBoxRect: DOMRect, elementsToIntersect: readonly Element[]) => {
-            const intersectedElements: Element[] = [];
             const elementsBoundingRects = await getBoundingClientRectsAsync(elementsToIntersect);
-            for (let i = elementsToIntersect.length - 1; i >= 0; i--) {
-                if (
+            return elementsToIntersect.filter((elementToCheckIntersection, i) => {
+                return (
+                    elementToCheckIntersection &&
                     checkIntersection(
                         intersectionBoxRect,
-                        elementsBoundingRects[i] ?? elementsToIntersect[i].getBoundingClientRect() // fallback to regular synchronous getBoundingClientRect
+                        elementsBoundingRects[i] ??
+                            elementToCheckIntersection.getBoundingClientRect() // fallback to regular synchronous getBoundingClientRect
                     )
-                ) {
-                    intersectedElements.push(elementsToIntersect[i]);
-                }
-            }
-            return intersectedElements;
+                );
+            });
         },
         [checkIntersection, getBoundingClientRectsAsync]
     );
