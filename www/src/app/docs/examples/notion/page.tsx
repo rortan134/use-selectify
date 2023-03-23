@@ -6,10 +6,12 @@ import { renderToString } from "react-dom/server";
 
 import { cva, type VariantProps } from "class-variance-authority";
 import sanitizeHtml from "sanitize-html";
-import ContentEditable, { type ContentEditableEvent } from "react-contenteditable";
+import ContentEditable, {
+  type ContentEditableEvent,
+} from "react-contenteditable";
 import { useSelectify } from "use-selectify";
 
-import useEventListener from "../../utils/useEventListener";
+import useEventListener from "../../../../utils/useEventListener";
 
 const blockVariants = cva(
   "group relative w-full rounded-md px-0.5 py-1 text-[#37352f] caret-[#37352f] flex items-start data-[selected=true]:select-none",

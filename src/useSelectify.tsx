@@ -1002,7 +1002,7 @@ function useSelectify<T extends HTMLElement>(
         );
     };
 
-    SelectBoxOutlet.displayName = SELECT_BOX_NAME;
+    SelectBoxOutlet.displayName = SELECTION_BOX_NAME;
 
     return {
         SelectBoxOutlet,

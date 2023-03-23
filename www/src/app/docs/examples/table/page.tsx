@@ -1,11 +1,12 @@
 "use client";
 import * as React from "react";
 
-import { Input } from "../../components/Input";
-import { Button } from "../../components/Button";
-import { Checkbox } from "../../components/Checkbox";
+import { Input } from "../../../../components/Input";
+import { Button } from "../../../../components/Button";
+import { Checkbox } from "../../../../components/Checkbox";
+import { Container } from "../../../../components/Container";
 
-import { cn } from "../../utils/cn";
+import { cn } from "../../../../utils/cn";
 import { useSelectify } from "use-selectify";
 
 import { Search, ChevronDown, ChevronUp, Plus } from "lucide-react";
@@ -44,14 +45,15 @@ export default function TablePage() {
   ) => {
     if (!elementToSelect) return;
 
-    // check if it isn't alredy selected
+    // Check if it isn't alredy selected
     if (!selectedElements.includes(elementToSelect)) {
+      // Select
       mutateSelections((prevSelections) => [
         ...prevSelections,
         elementToSelect,
       ]);
     } else {
-      // unselect
+      // Unselect
       mutateSelections((prevSelections) =>
         prevSelections.filter((element) => element !== elementToSelect)
       );
@@ -59,134 +61,122 @@ export default function TablePage() {
   };
 
   return (
-    <div ref={selectionContainerRef} className="relative h-full w-full">
-      <div className="container mx-auto py-16 px-2 md:px-8">
-        <div data-exclude className="mb-14 space-y-3 md:px-16">
-          <h1 className="text-4xl font-semibold text-slate-900 dark:text-slate-50">
-            Datatable
-          </h1>
-          <p className="text-lg text-slate-900 dark:text-neutral-400">
-            A table with drag-selection integrated for easier bulk actions.
-            <br />
-            Built using{" "}
-            <Button
-              href="https://www.radix-ui.com"
-              variant="link"
-              className="px-0"
-            >
-              RadixUI
-            </Button>{" "}
-            and{" "}
-            <Button
-              href="https://ui.shadcn.com"
-              variant="link"
-              className="px-0"
-            >
-              shadcnUI
-            </Button>{" "}
-            components.
-          </p>
-        </div>
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex-1 pr-4">
-            <div className="relative md:w-1/3">
-              <Input type="search" placeholder="Search..." className="pl-10" />
-              <Search className="pointer-events-none absolute left-0 top-1/2 ml-3 h-5 w-5 -translate-y-1/2 text-neutral-400" />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New entry
-            </Button>
-            <Button variant="destructive" disabled={!hasSelected}>
-              Delete
-            </Button>
+    <Container ref={selectionContainerRef}>
+      <div data-exclude className="mb-14 space-y-3 md:px-16">
+        <h1 className="text-4xl font-semibold text-slate-900 dark:text-slate-50">
+          Datatable
+        </h1>
+        <p className="text-lg text-slate-900 dark:text-neutral-400">
+          A table with drag-selection integrated for easier bulk actions.
+          <br />
+          Built using{" "}
+          <Button
+            href="https://www.radix-ui.com"
+            variant="link"
+            className="px-0"
+          >
+            RadixUI
+          </Button>{" "}
+          and{" "}
+          <Button href="https://ui.shadcn.com" variant="link" className="px-0">
+            shadcnUI
+          </Button>{" "}
+          components.
+        </p>
+      </div>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex-1 pr-4">
+          <div className="relative md:w-1/3">
+            <Input type="search" placeholder="Search..." className="pl-10" />
+            <Search className="pointer-events-none absolute left-0 top-1/2 ml-3 h-5 w-5 -translate-y-1/2 text-neutral-400" />
           </div>
         </div>
-        <div
-          data-exclude
-          className={cn(
-            "relative overflow-x-auto overflow-y-auto rounded-lg bg-neutral-900 shadow",
-            {
-              "h-[405px]": !expanded,
-            }
-          )}
-        >
-          <table className="whitespace-no-wrap relative w-full table-auto border-collapse">
-            <thead>
-              <tr className="text-left">
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 py-2 px-3">
-                  <label className="inline-flex cursor-pointer items-center justify-between rounded-lg px-2 py-2">
-                    <Checkbox
-                      checked={hasSelected}
-                      halfChecked={hasSelected && !hasSelectedEverything}
-                      onCheckedChange={() => {
-                        if (hasSelected) {
-                          clearSelection();
-                        } else {
-                          selectAll();
-                        }
-                      }}
-                    />
-                  </label>
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  User Id
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  First Name
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  Last Name
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  Email
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  Gender
-                </th>
-                <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
-                  Phone
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((user) => (
-                <TableItem
-                  key={user.userId}
-                  user={user}
-                  selectedElements={selectedElements}
-                  toggle={toggleItemSelection}
-                />
-              ))}
-            </tbody>
-          </table>
-          <div className="sticky bottom-0 w-full bg-gradient-to-t from-neutral-900 pt-1 pb-4">
-            <div className="flex w-full justify-center">
-              <Button
-                variant="subtle"
-                size="sm"
-                onClick={() => setExpanded((prevState) => !prevState)}
-              >
-                {!expanded ? (
-                  <>
-                    <ChevronDown className="mr-1 h-4 w-4" />
-                    Expand
-                  </>
-                ) : (
-                  <>
-                    <ChevronUp className="mr-1 h-4 w-4" />
-                    Collapse
-                  </>
-                )}
-              </Button>
-            </div>
+        <div className="flex items-center justify-end space-x-2 md:justify-center">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New entry
+          </Button>
+          <Button variant="destructive" disabled={!hasSelected}>
+            Delete
+          </Button>
+        </div>
+      </div>
+      <div
+        data-exclude
+        className={cn(
+          "relative overflow-x-auto overflow-y-auto rounded-lg bg-neutral-900 shadow",
+          {
+            "h-[405px]": !expanded,
+          }
+        )}
+      >
+        <table className="whitespace-no-wrap relative w-full table-auto border-collapse">
+          <thead>
+            <tr className="text-left">
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 py-2 px-3">
+                <label className="inline-flex cursor-pointer items-center justify-between rounded-lg px-2 py-2">
+                  <Checkbox
+                    checked={hasSelected}
+                    halfChecked={hasSelected && !hasSelectedEverything}
+                    onCheckedChange={hasSelected ? clearSelection : selectAll}
+                  />
+                </label>
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                User Id
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                First Name
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                Last Name
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                Email
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                Gender
+              </th>
+              <th className="sticky top-0 border-b border-neutral-700 bg-neutral-800 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-100">
+                Phone
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((user) => (
+              <TableItem
+                key={user.userId}
+                user={user}
+                selectedElements={selectedElements}
+                toggle={toggleItemSelection}
+              />
+            ))}
+          </tbody>
+        </table>
+        <div className="sticky bottom-0 w-full bg-gradient-to-t from-neutral-900 pt-1 pb-4">
+          <div className="flex w-full justify-center">
+            <Button
+              variant="subtle"
+              size="sm"
+              onClick={() => setExpanded((prevState) => !prevState)}
+            >
+              {!expanded ? (
+                <>
+                  <ChevronDown className="mr-1 h-4 w-4" />
+                  Expand
+                </>
+              ) : (
+                <>
+                  <ChevronUp className="mr-1 h-4 w-4" />
+                  Collapse
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
       <SelectBoxOutlet className="border border-dashed border-white/50 bg-white/10" />
-    </div>
+    </Container>
   );
 }
 

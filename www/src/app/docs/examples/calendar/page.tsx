@@ -5,18 +5,18 @@
 "use client";
 import * as React from "react";
 
-import { Button } from "../../components/Button";
+import { Button } from "../../../../components/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../components/DropdownMenu";
+} from "../../../../components/DropdownMenu";
 
-import useEventListener from "../../utils/useEventListener";
+import useEventListener from "../../../../utils/useEventListener";
 import { useSelectify } from "use-selectify";
-import { cn } from "../../utils/cn";
+import { cn } from "../../../../utils/cn";
 
 import { ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
 
@@ -78,6 +78,7 @@ export default function CalendarPage() {
     selectionContainerRef,
     {
       selectCriteria: selectionCriteria,
+      scrollContext: globalThis?.window,
     }
   );
 
@@ -208,10 +209,10 @@ export default function CalendarPage() {
       </div>
       <div className="w-full rounded-lg bg-neutral-900 shadow md:p-6">
         <CalendarInteractions />
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full overflow-x-auto">
           <table
             ref={selectionContainerRef}
-            className="whitespace-no-wrap relative w-full table-fixed border-collapse select-none rounded-lg bg-neutral-800"
+            className="whitespace-no-wrap table-fixed border-collapse select-none rounded-lg bg-neutral-800"
           >
             <TableHeader />
             <tbody>
@@ -305,7 +306,7 @@ const DayBlock = ({
       data-calendarday
       ref={dayRef}
       className={cn(
-        "ease h-40 w-10 border border-neutral-700/50 p-1 transition hover:z-10 hover:bg-neutral-800 hover:shadow-lg",
+        "ease h-40 w-10 min-w-full overflow-hidden border border-neutral-700/50 p-1 transition hover:z-10 hover:bg-neutral-800 hover:shadow-lg",
         {
           "border-blue-600 bg-blue-600/20 shadow-lg hover:bg-blue-600/25":
             isInSelectedDateRange,
@@ -314,7 +315,7 @@ const DayBlock = ({
         }
       )}
     >
-      <div className="flex h-full w-full flex-col overflow-hidden p-2">
+      <div className="flex h-full w-full flex-col p-2">
         <div className="h-full w-full flex-grow py-1">
           {calendarDay.events.map((event, i) => (
             <div
@@ -356,11 +357,11 @@ const CalendarInteractions = () => {
 
   return (
     <div className="flex items-center justify-between rounded-t-lg bg-neutral-900 p-4 md:px-8">
-      <h4 className="text-2xl font-semibold capitalize text-slate-50">
+      <h4 className="text-xl font-semibold capitalize text-slate-50 md:text-2xl">
         {currDate.toLocaleDateString([], { month: "long" })}{" "}
         {currDate.getFullYear()}
       </h4>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 md:space-x-4">
         <div className="flex items-center">
           <Button variant="ghost" size="sm">
             <ChevronLeft className="h-5 w-5" />
