@@ -4,9 +4,9 @@ import { Inter } from "next/font/google";
 
 import "~/styles/globals.css";
 
-import Sidebar from "../components/Sidebar";
-import FloatingButton from "../components/FloatingButton";
 import Body from "./Body";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 
 export const metadata: Metadata = {
   title: "The Ultimate Drag-to-Select Solution for React | use-selectify",
@@ -66,8 +66,11 @@ export const metadata: Metadata = {
   category: "technology",
   robots: {
     index: true,
-    follow: true
-  }
+    follow: true,
+  },
+  verification: {
+    google: "8C2WRZ6vFGgJSaoWSjDhrgtctV_jVwGGT27yIXn5mFI",
+  },
 };
 
 const segoeUI = localFont({
@@ -93,9 +96,9 @@ export default function RootLayout({
       className={`${segoeUI.variable} ${inter.variable}`}
     >
       <Body>
+        <Header />
         <Sidebar />
-        <main className="relative w-full px-3">{children}</main>
-        <FloatingButton />
+        <main className="relative col-span-full md:col-span-4">{children}</main>
       </Body>
     </html>
   );

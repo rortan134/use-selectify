@@ -307,12 +307,6 @@ const SelectionMagnifierRoot = React.forwardRef<HTMLDivElement, SelectionMagnifi
 
 SelectionMagnifierRoot.displayName = SELECTION_MAGNIFIER_ROOT_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * Selectify Hook
- * -----------------------------------------------------------------------------------------------*/
-
-const DEFAULT_SELECT_CRITERIA = "*";
-
 export interface UseSelectProps {
     /**
      * Maximum number of elements that can be selected.
