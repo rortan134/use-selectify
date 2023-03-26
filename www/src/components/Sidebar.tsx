@@ -1,22 +1,17 @@
 "use client";
-import * as React from "react";
+import { ChevronDown,Github, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
-import { isMobile } from "react-device-detect";
-
-import { Button } from "./Button";
+import { routes } from "../routes";
+import { cn } from "../utils/cn";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../components/Accordion";
-
-import { cn } from "../utils/cn";
-
-import { routes } from "../routes";
-
-import { Github, Menu, X, ChevronDown } from "lucide-react";
+} from "./Accordion";
+import { Button } from "./Button";
 
 export default function Sidebar() {
   const currentRoute = usePathname();
@@ -25,7 +20,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-14 z-20 col-span-full h-fit space-y-8 overflow-x-hidden border-b border-neutral-600 bg-inherit px-2 pb-4 font-inter tracking-tight transition-colors scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-100 dark:scrollbar-thumb-neutral-200/10 md:col-span-1 md:max-h-screen md:w-64 md:border-none",
+        "sticky top-14 z-20 col-span-full h-fit max-h-full space-y-8 overflow-x-hidden border-b border-neutral-600 bg-inherit px-2 pb-2 font-inter tracking-tight transition-colors md:col-span-1 md:max-h-screen md:w-64 md:border-none md:pb-6",
         {
           "bg-[#2c2c2c]": currentRoute === "/figma",
         }
@@ -45,30 +40,30 @@ export default function Sidebar() {
         Menu
       </Button>
       <div
-        className={cn("flex w-full flex-col space-y-4", {
-          hidden: !isOpen && isMobile,
+        className={cn("flex w-full flex-col space-y-6", {
+          "hidden md:flex": !isOpen,
         })}
       >
-        <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-          Getting Started
-        </h2>
-        <div className="flex w-full flex-col space-y-1">
+        <div className="flex w-full flex-col space-y-3">
+          <h2 className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+            Getting Started
+          </h2>
           <Button
             href="https://github.com/rortan134/use-selectify#readme"
             target="_blank"
             variant="ghost"
-            className="justify-between"
+            className="group justify-between"
           >
             <span className="flex">
               <Github className="mr-2 h-5 w-5" />
               Documentation
             </span>
-            <span className="w-min rounded-2xl bg-neutral-200 py-1 px-2 text-xs text-slate-800 dark:bg-neutral-800 dark:text-slate-50">
+            <span className="w-min rounded-2xl bg-neutral-200 py-1 px-2 text-xs text-slate-900 group-hover:bg-neutral-300 dark:bg-neutral-800 dark:text-slate-50 dark:group-hover:bg-neutral-700">
               v0.3.2
             </span>
           </Button>
         </div>
-        <div className="flex w-full flex-col space-y-3">
+        <div className="flex w-full flex-col space-y-6">
           {routes.map((pageRoute) =>
             pageRoute.subRoutes ? (
               <Accordion
@@ -89,15 +84,19 @@ export default function Sidebar() {
                         currentRoute === pageRoute.route ? "open" : "closed"
                       }
                       variant="ghost"
-                      className="w-full opacity-100"
+                      className="group w-full opacity-100"
                     >
                       {pageRoute.name}
-                      <ChevronDown className="h-5 w-5 transition-transform duration-200" />
+                      <ChevronDown
+                        className={cn(
+                          "h-5 w-5 transition-transform group-aria-[expanded=true]:rotate-180"
+                        )}
+                      />
                     </Button>
                   </AccordionTrigger>
-                  <AccordionContent className="ml-6 border-l border-neutral-700 pl-3">
+                  <AccordionContent className="ml-6 h-0 overflow-hidden border-l border-neutral-200 pl-3 transition-[height] data-[state=open]:h-[var(--radix-accordion-content-height)] dark:border-neutral-700">
                     <div className="flex w-full flex-col space-y-3">
-                      {pageRoute.subRoutes.map((route) => (
+                      {pageRoute.subRoutes?.map((route) => (
                         <Button
                           key={route.name}
                           href={route.route}

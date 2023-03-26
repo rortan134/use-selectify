@@ -1,12 +1,11 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Inter } from "next/font/google";
-
 import "~/styles/globals.css";
 
-import Body from "./Body";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
+
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+import Body from "./Body";
 
 export const metadata: Metadata = {
   title: "The Ultimate Drag-to-Select Solution for React | use-selectify",
@@ -97,8 +96,7 @@ export default function RootLayout({
     >
       <Body>
         <Header />
-        <Sidebar />
-        <main className="relative col-span-full md:col-span-4">{children}</main>
+        {children}
       </Body>
     </html>
   );

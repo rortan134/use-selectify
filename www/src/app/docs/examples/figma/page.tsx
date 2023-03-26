@@ -3,18 +3,16 @@
  */
 
 "use client";
-import * as React from "react";
 import * as Toolbar from "@radix-ui/react-toolbar";
-
-import usePan from "./usePan";
-import useZoom from "./useZoom";
-import useLast from "./useLast";
+import { Hand,Inspect } from "lucide-react";
+import * as React from "react";
 import { useSelectify } from "use-selectify";
 
-import addEventListener from "../../../../utils/useEventListener";
 import { cn } from "../../../../utils/cn";
-
-import { Inspect, Hand } from "lucide-react";
+import addEventListener from "../../../../utils/useEventListener";
+import useLast from "./useLast";
+import usePan from "./usePan";
+import useZoom from "./useZoom";
 
 function getDelta(
   pointA: { x: number; y: number },
@@ -98,8 +96,8 @@ export default function FigmaDemo() {
   );
 
   return (
-    <section className="flex h-full w-full flex-col overflow-hidden">
-      <Toolbar.Root className="absolute inset-x-0 z-40 flex w-full min-w-max border-b border-[#444444] bg-[#2c2c2c] px-3">
+    <section className="flex min-h-screen h-full w-full flex-col overflow-hidden">
+      <Toolbar.Root className="flex w-full min-w-max border-b border-[#444444] bg-[#2c2c2c] px-3">
         <Toolbar.ToggleGroup
           onValueChange={setCanvasMode}
           type="single"
@@ -124,7 +122,7 @@ export default function FigmaDemo() {
           </Toolbar.ToggleItem>
         </Toolbar.ToggleGroup>
       </Toolbar.Root>
-      <div className="flex h-full w-full flex-1">
+      <div className="relative flex h-full w-full flex-1">
         <div
           ref={selectionContainerRef}
           className="relative h-full w-full flex-1"
@@ -166,7 +164,6 @@ export default function FigmaDemo() {
           </div>
           <SelectBoxOutlet className="border border-[#0d99ff] bg-[#0d99ff]/20" />
         </div>
-        <aside className="z-10 fixed inset-y-0 right-0 hidden h-full w-64 border-l border-[#444444] bg-[#2c2c2c] md:block" />
       </div>
     </section>
   );

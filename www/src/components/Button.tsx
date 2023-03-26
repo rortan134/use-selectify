@@ -1,6 +1,6 @@
-import * as React from "react";
+import { cva,type VariantProps } from "class-variance-authority";
 import Link, { type LinkRestProps } from "next/link";
-import { type VariantProps, cva } from "class-variance-authority";
+import * as React from "react";
 
 import { cn } from "../utils/cn";
 
@@ -13,7 +13,7 @@ const buttonVariants = cva(
           "bg-neutral-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900 hover:bg-neutral-800 hover:text-slate-50 dark:hover:bg-neutral-800 dark:hover:text-slate-50",
         destructive: "bg-red-500 text-slate-50 hover:bg-red-600",
         outline:
-          "bg-transparent border border-neutral-600 hover:bg-neutral-700 dark:hover:text-white dark:text-slate-50",
+          "bg-transparent border border-neutral-600 hover:bg-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white dark:text-slate-50",
         subtle: "bg-neutral-800 text-slate-50 hover:bg-neutral-700",
         ghost:
           "data-[state=open]:opacity-100 opacity-80 hover:opacity-100 bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800 dark:text-slate-50 dark:hover:text-slate-50 dark:data-[state=open]:text-slate-900 data-[state=open]:bg-neutral-900 dark:data-[state=open]:bg-slate-50",
@@ -22,7 +22,7 @@ const buttonVariants = cva(
       size: {
         default: "h-10 py-2 px-4",
         sm: "h-9 px-2 rounded-md",
-        lg: "h-11 py-2 px-8 rounded-md",
+        lg: "h-fit py-3 px-6 text-base rounded-md",
       },
     },
     defaultVariants: {

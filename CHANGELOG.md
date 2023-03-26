@@ -20,4 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Changes
 
-<!-- -   Published official [demos & examples](https://useselectify.js.org) -->
+-   Published official [demos & examples](https://useselectify.js.org)

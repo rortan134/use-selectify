@@ -3,7 +3,9 @@
  */
 
 "use client";
+import { ChevronDown, ChevronLeft,ChevronRight } from "lucide-react";
 import * as React from "react";
+import { useSelectify } from "use-selectify";
 
 import { Button } from "../../../../components/Button";
 import {
@@ -13,12 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../../../components/DropdownMenu";
-
-import useEventListener from "../../../../utils/useEventListener";
-import { useSelectify } from "use-selectify";
 import { cn } from "../../../../utils/cn";
-
-import { ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import useEventListener from "../../../../utils/useEventListener";
 
 interface CalendarEvent {
   date: Date;
@@ -212,7 +210,7 @@ export default function CalendarPage() {
         <div className="relative h-full w-full overflow-x-auto">
           <table
             ref={selectionContainerRef}
-            className="whitespace-no-wrap table-fixed border-collapse select-none rounded-lg bg-neutral-800"
+            className="whitespace-no-wrap min-w-full table-fixed border-collapse select-none rounded-lg bg-neutral-800"
           >
             <TableHeader />
             <tbody>
@@ -299,6 +297,7 @@ const DayBlock = ({
         calendarDays.filter((day) => day !== calendarDay)
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isElementSelected, setSelectedCalendarDays]);
 
   return (

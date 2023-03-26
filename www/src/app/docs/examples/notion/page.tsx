@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
-import * as React from "react";
-import { renderToString } from "react-dom/server";
-
 import { cva, type VariantProps } from "class-variance-authority";
-import sanitizeHtml from "sanitize-html";
+import * as React from "react";
 import ContentEditable, {
   type ContentEditableEvent,
 } from "react-contenteditable";
+import { renderToString } from "react-dom/server";
+import sanitizeHtml from "sanitize-html";
 import { useSelectify } from "use-selectify";
 
 import useEventListener from "../../../../utils/useEventListener";
@@ -95,7 +94,7 @@ const Block = ({
           <div className="absolute -left-8 top-2 h-full cursor-grab items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <svg
               viewBox="0 0 10 10"
-              className="flex w-6 rounded-md fill-slate-800/50 p-1.5 transition-colors hover:bg-slate-100"
+              className="flex w-6 rounded-md fill-slate-800/50 p-1.5 transition-colors hover:bg-neutral-100"
             >
               <path d="M3,2 C2.44771525,2 2,1.55228475 2,1 C2,0.44771525 2.44771525,0 3,0 C3.55228475,0 4,0.44771525 4,1 C4,1.55228475 3.55228475,2 3,2 Z M3,6 C2.44771525,6 2,5.55228475 2,5 C2,4.44771525 2.44771525,4 3,4 C3.55228475,4 4,4.44771525 4,5 C4,5.55228475 3.55228475,6 3,6 Z M3,10 C2.44771525,10 2,9.55228475 2,9 C2,8.44771525 2.44771525,8 3,8 C3.55228475,8 4,8.44771525 4,9 C4,9.55228475 3.55228475,10 3,10 Z M7,2 C6.44771525,2 6,1.55228475 6,1 C6,0.44771525 6.44771525,0 7,0 C7.55228475,0 8,0.44771525 8,1 C8,1.55228475 7.55228475,2 7,2 Z M7,6 C6.44771525,6 6,5.55228475 6,5 C6,4.44771525 6.44771525,4 7,4 C7.55228475,4 8,4.44771525 8,5 C8,5.55228475 7.55228475,6 7,6 Z M7,10 C6.44771525,10 6,9.55228475 6,9 C6,8.44771525 6.44771525,8 7,8 C7.55228475,8 8,8.44771525 8,9 C8,9.55228475 7.55228475,10 7,10 Z"></path>
             </svg>
@@ -103,7 +102,7 @@ const Block = ({
           <div className="absolute -left-16 top-2 h-full cursor-pointer items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <svg
               viewBox="0 0 16 16"
-              className="block w-6 rounded-md fill-slate-800/50 p-1 transition-colors hover:bg-slate-100"
+              className="block w-6 rounded-md fill-slate-800/50 p-1 transition-colors hover:bg-neutral-100"
             >
               <path d="M7.977 14.963c.407 0 .747-.324.747-.723V8.72h5.362c.399 0 .74-.34.74-.747a.746.746 0 00-.74-.738H8.724V1.706c0-.398-.34-.722-.747-.722a.732.732 0 00-.739.722v5.529h-5.37a.746.746 0 00-.74.738c0 .407.341.747.74.747h5.37v5.52c0 .399.332.723.739.723z"></path>
             </svg>
@@ -147,27 +146,30 @@ export default function NotionDemo() {
     }
   );
 
-  const handleKeys = React.useCallback((event: KeyboardEvent) => {
-    switch (event.key) {
-      case "Backspace": {
-        if (
-          document.activeElement &&
-          document.activeElement?.parentElement?.innerText === "" &&
-          exclusionZoneRef?.current?.children &&
-          exclusionZoneRef?.current?.children?.length > 1
-        ) {
-          document.activeElement?.parentElement.remove();
+  const handleKeys = React.useCallback(
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "Backspace": {
+          if (
+            document.activeElement &&
+            document.activeElement?.parentElement?.innerText === "" &&
+            exclusionZoneRef?.current?.children &&
+            exclusionZoneRef?.current?.children?.length > 1
+          ) {
+            document.activeElement?.parentElement.remove();
+          }
+          break;
         }
-        break;
+        case "Escape": {
+          clearSelection();
+          break;
+        }
+        default:
+          return;
       }
-      case "Escape": {
-        clearSelection();
-        break;
-      }
-      default:
-        return;
-    }
-  }, []);
+    },
+    [clearSelection]
+  );
 
   useEventListener(globalThis?.document, "keydown", handleKeys);
 
@@ -179,7 +181,7 @@ export default function NotionDemo() {
       <header className="flex w-full flex-shrink-0 select-none justify-center">
         <div className="w-full min-w-0 max-w-[900px] pl-24">
           <div className="mt-20 mb-2 flex h-6 flex-wrap text-slate-800/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-neutral-100">
               <svg
                 viewBox="0 0 14 14"
                 className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
@@ -192,7 +194,7 @@ export default function NotionDemo() {
               </svg>
               Add icon
             </button>
-            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-neutral-100">
               <svg
                 viewBox="0 0 14 14"
                 className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
@@ -205,7 +207,7 @@ export default function NotionDemo() {
               </svg>
               Add cover
             </button>
-            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-slate-100">
+            <button className="mx-1 inline-flex min-w-0 items-center whitespace-nowrap rounded-md p-1.5 text-xs transition-colors hover:bg-neutral-100">
               <svg
                 viewBox="0 0 16 16"
                 className="mr-2 block h-4 w-4 flex-shrink-0 fill-slate-800/50"
@@ -335,10 +337,5 @@ const data: BlockSchema[] = [
     type: "paragraph",
     variant: "callout",
     content: "$ npm i use-selectify\nor\n$ yarn add use-selectify",
-  },
-  {
-    type: "paragraph",
-    variant: "default",
-    content: `<a href="https://github.com/rortan134/use-selectify#readme" className="cursor-pointer text-blue-500 underline-offset-4 hover:underline">Getting Started</a>`,
   },
 ];

@@ -1,16 +1,15 @@
-import React from "react";
-import type { Route } from "next";
-
 import {
-  Figma,
-  Table,
-  Table2,
   Calendar,
   Code2,
   ExternalLink,
+  Figma,
+  Table,
+  Table2,
 } from "lucide-react";
+import type { Route } from "next";
+import React from "react";
 
-interface AppRoute {
+export interface AppRoute {
   name: string;
   description?: string;
   icon: JSX.Element;

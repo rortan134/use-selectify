@@ -1,14 +1,13 @@
 "use client";
-import * as React from "react";
+import { ExternalLink, Github, Twitter } from "lucide-react";
+import type { Route } from "next";
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import type { Route } from "next";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
-import { cn } from "../utils/cn";
-
-import { ExternalLink, Github, Twitter } from "lucide-react";
 import Logo from "../../public/logo.svg";
+import { cn } from "../utils/cn";
 
 const NavLink = ({
   href,
@@ -57,7 +56,7 @@ export default function Header() {
         <ul className="hidden flex-1 items-center justify-end space-x-4 md:flex">
           <NavLink href="https://github.com/rortan134/use-selectify#readme">
             Documentation
-            <ExternalLink className="ml-2 h-4 w-4" />
+            <ExternalLink className="ml-1 h-4 w-4" />
           </NavLink>
           <NavLink href="/docs/examples">Examples</NavLink>
           {/* <NavLink href="/about">About</NavLink> */}
@@ -65,7 +64,7 @@ export default function Header() {
             <Github className="h-5 w-5" />
           </NavLink>
           <NavLink href="https://twitter.com/meetgilberto">
-            <Twitter className="h-5 w-5 fill-slate-50" />
+            <Twitter className="h-5 w-5" />
           </NavLink>
         </ul>
       </nav>

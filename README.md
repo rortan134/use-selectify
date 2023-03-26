@@ -35,9 +35,7 @@ Drag interactions are one of the most challenging aspects of the web. Having com
 
 Recognizing this need, `use-selectify` was created aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
 
-Demo & Examples: Work in progress...
-
-<!-- Demo & Examples: [useselectify.js.org](https://useselectify.js.org/) -->
+Demo & Examples: [useselectify.js.org](https://useselectify.js.org/)
 
 ## Key Features
 
@@ -54,6 +52,8 @@ Demo & Examples: Work in progress...
 ✅ Works on every device
 
 ✅ SSR & Lazy loading support
+
+✅ Zero dependencies
 
 ## Installation
 
@@ -76,6 +76,7 @@ Import the `useSelectify` hook. Both default and named imports are supported.
 ```tsx
 import { useSelectify } from "use-selectify";
 ```
+
 ## Anatomy
 
 ```tsx
@@ -461,13 +462,13 @@ export function App() {
 | selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected to prevent accidental selection.                                                            |
 | label                   | string                                                   | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
 | selectionTolerance      | number                                                   | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
-| activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl/Cmd and Alt.         |
-| activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag. Ex: ["Tab", "Control", "Alt"]                                                      |
+| activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl/Cmd and Alt.          |
+| activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag. Ex: ["Tab", "Control", "Alt"]                        |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                       |
 | exclusionZone           | Element \| Element[] \| string                           | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
 | scrollContext           | HTMLElement \| Window                                    | `window`         | Sets the scrollable element for the automatic window scrolling to react.                                                                                |
-| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements. Supports CSS Selectors.                                                |
+| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements. Supports CSS Selectors.                        |
 | lazyLoad                | boolean                                                  | false            | Defers loading the selection box.                                                                                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
@@ -515,7 +516,7 @@ Although we support touch interactions, it should be considered the conflict of 
 
 No, not currently.
 
-<hr/>
+---
 
 Looking forward to seeing how this project and the community evolve and provide feedback. Whether it's a feature request, bug report, or a project to showcase, feel free to get involved!
 
