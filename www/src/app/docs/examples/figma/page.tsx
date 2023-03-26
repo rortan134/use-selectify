@@ -11,8 +11,8 @@ import useZoom from "./useZoom";
 import useLast from "./useLast";
 import { useSelectify } from "use-selectify";
 
-import addEventListener from "../../utils/useEventListener";
-import { cn } from "../../utils/cn";
+import addEventListener from "../../../../utils/useEventListener";
+import { cn } from "../../../../utils/cn";
 
 import { Inspect, Hand } from "lucide-react";
 

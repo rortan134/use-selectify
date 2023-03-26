@@ -1,53 +1,93 @@
 import React from "react";
 import type { Route } from "next";
 
-import { Figma, Table, Table2, Calendar } from "lucide-react";
+import {
+  Figma,
+  Table,
+  Table2,
+  Calendar,
+  Code2,
+  ExternalLink,
+} from "lucide-react";
 
 interface AppRoute {
   name: string;
+  description?: string;
   icon: JSX.Element;
-  route: Route;
-  themeColor: string;
-  code: string;
+  route?: Route;
+  themeColor?: string;
+  subRoutes?: AppRoute[];
+  code?: string;
   disabled?: boolean;
+  newTab?: boolean;
 }
 
 export const routes: AppRoute[] = [
   {
-    name: "Table",
-    icon: <Table className="mr-2 h-4 w-4" />,
-    route: "/table",
-    themeColor: "#131313",
-    code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/table/page.tsx",
+    name: "Examples",
+    description:
+      "Showcase of a few available configurations for building complex interactions with use-selectify.",
+    icon: <Code2 className="mr-2 h-4 w-4" />,
+    route: "/docs/examples",
+    subRoutes: [
+      {
+        name: "Table",
+        icon: <Table className="mr-2 h-4 w-4" />,
+        route: "/docs/examples/table",
+        code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/table/page.tsx",
+      },
+      {
+        name: "Spreadsheet (soon)",
+        icon: <Table2 className="mr-2 h-4 w-4" />,
+        route: "/docs/examples/spreadsheet",
+        code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/spreadsheet/page.tsx",
+        disabled: true,
+      },
+      {
+        name: "Calendar",
+        icon: <Calendar className="mr-2 h-4 w-4" />,
+        route: "/docs/examples/calendar",
+        code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/calendar/page.tsx",
+      },
+      {
+        name: "Notion Demo",
+        icon: <NotionIcon />,
+        route: "/docs/examples/notion",
+        themeColor: "#ffffff",
+        code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/notion/page.tsx",
+      },
+      {
+        name: "Figma Demo",
+        icon: <Figma className="mr-2 h-4 w-4" />,
+        route: "/docs/examples/figma",
+        themeColor: "#1e1e1e",
+        code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/figma/page.tsx",
+      },
+    ],
   },
   {
-    name: "Spreadsheet (soon)",
-    icon: <Table2 className="mr-2 h-4 w-4" />,
-    route: "/spreadsheet",
-    themeColor: "#131313",
-    code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/spreadsheet/page.tsx",
-    disabled: true,
-  },
-  {
-    name: "Calendar",
-    icon: <Calendar className="mr-2 h-4 w-4" />,
-    route: "/calendar",
-    themeColor: "#131313",
-    code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/calendar/page.tsx",
-  },
-  {
-    name: "Notion Demo",
-    icon: <NotionIcon />,
-    route: "/notion",
-    themeColor: "#ffffff",
-    code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/notion/page.tsx",
-  },
-  {
-    name: "Figma Demo",
+    name: "Community",
     icon: <Figma className="mr-2 h-4 w-4" />,
-    route: "/figma",
-    themeColor: "#1e1e1e",
-    code: "https://github.com/rortan134/use-selectify/blob/master/www/src/app/figma/page.tsx",
+    subRoutes: [
+      {
+        name: "Twitter",
+        icon: <ExternalLink className="mr-2 h-4 w-4" />,
+        route: "https://twitter.com/meetgilberto",
+        newTab: true,
+      },
+      {
+        name: "View on npm",
+        icon: <ExternalLink className="mr-2 h-4 w-4" />,
+        route: "https://www.npmjs.com/package/use-selectify",
+        newTab: true,
+      },
+      {
+        name: "Report an issue",
+        icon: <ExternalLink className="mr-2 h-4 w-4" />,
+        route: "https://github.com/rortan134/use-selectify/issues/new",
+        newTab: true,
+      },
+    ],
   },
 ];
 

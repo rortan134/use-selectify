@@ -9,11 +9,6 @@ const config = {
   async redirects() {
     return [
       {
-        source: "/",
-        destination: "/table",
-        permanent: false,
-      },
-      {
         source: "/docs",
         destination: "https://github.com/rortan134/use-selectify#readme",
         permanent: false,
