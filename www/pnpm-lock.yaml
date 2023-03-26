@@ -11,6 +11,7 @@ specifiers:
   '@types/node': ^18.15.9
   '@types/prettier': ^2.7.2
   '@types/react': ^18.0.29
+  '@types/react-copy-to-clipboard': ^5.0.4
   '@types/react-dom': ^18.0.11
   '@types/sanitize-html': ^2.9.0
   '@types/tinycolor2': ^1.4.3
@@ -67,6 +68,7 @@ devDependencies:
   '@types/node': 18.15.9
   '@types/prettier': 2.7.2
   '@types/react': 18.0.29
+  '@types/react-copy-to-clipboard': 5.0.4
   '@types/react-dom': 18.0.11
   '@types/sanitize-html': 2.9.0
   '@types/tinycolor2': 1.4.3
@@ -839,6 +841,12 @@ packages:
 
   /@types/prop-types/15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
+
+  /@types/react-copy-to-clipboard/5.0.4:
+    resolution: {integrity: sha512-otTJsJpofYAeaIeOwV5xBUGpo6exXG2HX7X4nseToCB2VgPEBxGBHCm/FecZ676doNR7HCSTVtmohxfG2b3/yQ==}
+    dependencies:
+      '@types/react': 18.0.29
+    dev: true
 
   /@types/react-dom/18.0.11:
     resolution: {integrity: sha512-O38bPbI2CWtgw/OoQoY+BRelw7uysmXbWvw3nLWO21H1HSh+GOlqPuXshJfjmpNlKiiSDG9cc1JZAaMmVdcTlw==}
