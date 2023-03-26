@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Core Changes
 
-<!-- -   Added new auxiliary magnifier component for mobile users (See [accessibility](/README.md#accessibility-optional)) -->
 -   Fixed parent's margin not being taken into for account for positioning
 -   Fixed unnecessary calculations on pointerdown
 -   Fixed unnecessary forced rerenders on the outlet component
 -   Removed alternate "outline" theme
 -   Further optimized intersection calculations
+-   Added support for `ref`s
+-   Fixed selection not cancelling when opening the context menu
+-   Deprecated `theme` prop in favor of your own custom styling
 
 ### Misc Changes
 

@@ -4,6 +4,7 @@ import "./styles/index.css";
 
 import * as React from "react";
 
+import { useComposedRefs } from "./utils/composeRefs";
 import { isNull } from "./utils/misc";
 import { useCallbackRef } from "./utils/useCallbackRef";
 import useEventListener from "./utils/useEventListener";
@@ -31,7 +32,7 @@ const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutE
  * SelectionLabel
  * -----------------------------------------------------------------------------------------------*/
 
-const SELECT_LABEL_NAME = "SelectionBoxLabel";
+const SELECTION_LABEL_NAME = "SelectionBoxLabel";
 const DEFAULT_SCREEN_READER_LABEL = "Drag Selection";
 
 const srOnlyStyles = {
@@ -46,7 +47,7 @@ const srOnlyStyles = {
     borderWidth: "0",
 } as const;
 
-interface SelectionLabelProps extends React.ComponentPropsWithoutRef<"div"> {
+interface SelectionLabelProps extends React.ComponentPropsWithoutRef<"span"> {
     id: string;
     label: string | undefined;
     children: React.ReactNode;
@@ -61,7 +62,7 @@ const SelectionLabel = React.memo(({ id, label, children }: SelectionLabelProps)
     );
 });
 
-SelectionLabel.displayName = SELECT_LABEL_NAME;
+SelectionLabel.displayName = SELECTION_LABEL_NAME;
 
 /* -------------------------------------------------------------------------------------------------
  * SelectionBox
@@ -70,16 +71,17 @@ SelectionLabel.displayName = SELECT_LABEL_NAME;
 const SELECTION_BOX_NAME = "SelectionBoxOutlet";
 const SELECTION_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 
-export type Theme = "default";
+const DEFAULT_THEME = "selectify_selection-box_default-theme";
 
-interface SelectionComponentProps extends React.ComponentPropsWithoutRef<"div"> {
+type SelectionComponentElement = React.ComponentPropsWithoutRef<"div">;
+
+interface SelectionComponentProps extends SelectionComponentElement {
     parentRef: React.RefObject<HTMLElement | null | undefined>;
     selectionBox: BoxBoundingPosition | null;
     isDragging: boolean;
     overlappedElementsCount: number;
     label: string | undefined;
-    theme: Theme | undefined;
-    forceMount: boolean | undefined;
+    forceMount?: true;
 }
 
 const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
@@ -89,14 +91,12 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
             selectionBox,
             isDragging,
             overlappedElementsCount,
-            theme = "default",
             forceMount,
             ...selectBoxProps
         } = props;
         const boxId = React.useId();
         const [liveText, setLiveText] = React.useState("");
         const wasDragActiveRef = React.useRef(false);
-        const defaultTheme = `selectify_selection-box_${theme}-theme`;
 
         React.useEffect(() => {
             React.startTransition(() => {
@@ -121,6 +121,10 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
                 setContentZIndex(window.getComputedStyle(parentRef.current).zIndex);
         }, [parentRef]);
 
+        if (!selectionBox) {
+            return null;
+        }
+
         return isDragging && !forceMount ? (
             <div
                 {...selectBoxProps}
@@ -129,7 +133,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
                 role="region"
                 tabIndex={-1}
                 aria-labelledby={boxId}
-                className={props.className || defaultTheme}
+                className={props.className || DEFAULT_THEME}
                 style={{
                     // Ensure border-box for floating-ui calculations
                     boxSizing: "border-box",
@@ -166,20 +170,11 @@ const LazySelectionBox = React.lazy(() => promiseWrapper({ default: SelectionBox
 
 const DEFAULT_SELECT_CRITERIA = "*";
 
-function throttle(timer?: (frame: FrameRequestCallback) => number) {
-    if (!timer) return;
-    let queuedCallback: (() => void) | null;
-    return (callback: () => void) => {
-        if (!queuedCallback) {
-            timer(() => {
-                const cb = queuedCallback;
-                queuedCallback = null;
-                cb?.();
-            });
-        }
-        queuedCallback = callback;
-    };
-}
+/* -------------------------------------------------------------------------------------------------
+ * Selectify Hook
+ * -----------------------------------------------------------------------------------------------*/
+
+const DEFAULT_SELECT_CRITERIA = "*";
 
 export interface UseSelectProps {
     /**
@@ -253,11 +248,14 @@ export interface UseSelectProps {
      */
     exclusionZone?: Element | Element[] | string | null;
     hideOnScroll?: boolean;
-    theme?: Theme;
+    /**
+     * @deprecated
+     */
+    theme?: "default";
     lazyLoad?: boolean;
     scrollContext?: HTMLElement | Window;
     disabled?: boolean;
-    forceMount?: boolean;
+    forceMount?: true;
     onSelect?(element: Element): void;
     onUnselect?(unselectedElement: Element): void;
     onDragStart?(e: PointerEvent): void | (() => void);
@@ -268,6 +266,21 @@ export interface UseSelectProps {
 
 function getSymetricDifference(arrA: Element[], arrB: Element[]) {
     return arrA.filter((x) => !arrB.includes(x)).concat(arrB.filter((x) => !arrA.includes(x)));
+}
+
+function throttle(timer?: (frame: FrameRequestCallback) => number) {
+    if (!timer) return;
+    let queuedCallback: (() => void) | null;
+    return (callback: () => void) => {
+        if (!queuedCallback) {
+            timer(() => {
+                const cb = queuedCallback;
+                queuedCallback = null;
+                cb?.();
+            });
+        }
+        queuedCallback = callback;
+    };
 }
 
 let originalElementTouchAction: string;
@@ -294,7 +307,6 @@ function useSelectify<T extends HTMLElement>(
         label,
         lazyLoad,
         scrollContext = globalThis?.window,
-        theme,
         selectionTolerance = 0,
         onSelect = () => {},
         onUnselect = () => {},
@@ -442,11 +454,14 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const getBoundingClientRectsAsync = React.useCallback(
-        (elements: readonly Element[]): Promise<DOMRectReadOnly[]> =>
-            new Promise((resolve) => {
-                resolve(observedRectsRef.current);
+        (elements: readonly Element[]) => {
+            const capturedRects = new Promise((resolve) => {
                 elements.forEach((element) => observer?.observe(element));
-            }),
+                resolve(observedRectsRef.current);
+            }) as Promise<DOMRectReadOnly[]>;
+            capturedRects.then(() => elements.forEach((element) => observer?.unobserve(element)));
+            return capturedRects;
+        },
         [observer]
     );
 
@@ -482,16 +497,11 @@ function useSelectify<T extends HTMLElement>(
             const { x: aX, y: aY } = startPoint as RequiredProperty<PositionPoint>;
             const { x: bX, y: bY } = endPoint as RequiredProperty<PositionPoint>;
 
-            const left = Math.min(aX, bX) - parentNode.offsetLeft;
-            const top = Math.min(aY, bY) - parentNode.offsetTop;
-            const width = Math.abs(aX - bX);
-            const height = Math.abs(aY - bY);
-
             return {
-                left: left,
-                top: top,
-                width: width,
-                height: height,
+                left: Math.min(aX, bX) - parentNode.offsetLeft,
+                top: Math.min(aY, bY) - parentNode.offsetTop,
+                width: Math.abs(aX - bX),
+                height: Math.abs(aY - bY),
             };
         },
         [ref]
@@ -714,7 +724,7 @@ function useSelectify<T extends HTMLElement>(
 
         const parentNodeComputedStyle = window.getComputedStyle(ref.current);
         const currParentNodeRect = parentNode.getBoundingClientRect();
-        const newParentNodeRect = {
+        return {
             ...currParentNodeRect,
             left:
                 currParentNodeRect.left -
@@ -722,15 +732,13 @@ function useSelectify<T extends HTMLElement>(
             top:
                 currParentNodeRect.top -
                 parseInt(parentNodeComputedStyle.getPropertyValue("margin-top")),
-        };
-
-        return newParentNodeRect as DOMRect;
+        } as DOMRect;
     }, [ref]);
 
     const handleScroll = React.useCallback(() => {
         if (hideOnScroll) {
             if (autoScroll) {
-                throw new Error("use-selectify: hideOnScroll & autoScroll are not compatible");
+                console.error("use-selectify: hideOnScroll & autoScroll are not compatible.");
             }
             cancelRectDraw();
         }
@@ -787,11 +795,11 @@ function useSelectify<T extends HTMLElement>(
                     : [exclusionZone].flat(); // Make sure exclusionZone will be an array
 
             if (!elementsToBeExcluded) return false;
-            const intersectsExclusionZone = await getIntersectedElements(
+            const elementsIntersectingExclusionZone = await getIntersectedElements(
                 new DOMRect(pointer.x, pointer.y, 1, 1), // Check intersection with a 1x1 artificial rect
                 elementsToBeExcluded
             );
-            return intersectsExclusionZone.length > 0;
+            return elementsIntersectingExclusionZone.length > 0;
         },
         [exclusionZone, findMatchingElements, getIntersectedElements, ref]
     );
@@ -812,6 +820,16 @@ function useSelectify<T extends HTMLElement>(
             }
 
             if (!activateOnMetaKey || (activateOnMetaKey && isModifierKey) || userKeyPressed) {
+                parentNodeRectRef.current = calculateParentNodeRect();
+                const eventStartingPoint = {
+                    x: event.clientX - parentNodeRectRef.current.left,
+                    y: event.clientY - parentNodeRectRef.current.top,
+                };
+
+                if (await isInExclusionZone(eventStartingPoint)) {
+                    return;
+                }
+
                 // Prevent implicit pointer capture
                 // https://www.w3.org/TR/pointerevents3/#implicit-pointer-capture
                 const target = event.target as HTMLElement;
@@ -823,18 +841,8 @@ function useSelectify<T extends HTMLElement>(
                 originalBodyUserSelect = document.body.style.webkitUserSelect;
                 document.body.style.webkitUserSelect = "none";
 
-                parentNodeRectRef.current = calculateParentNodeRect();
-                const eventStartingPoint = {
-                    x: event.clientX - parentNodeRectRef.current.left,
-                    y: event.clientY - parentNodeRectRef.current.top,
-                };
-
-                if (await isInExclusionZone(eventStartingPoint)) {
-                    return;
-                }
-
-                const userCallback = triggerOnDragStart(event);
-                userCallback?.();
+                const consumerCallback = triggerOnDragStart(event);
+                consumerCallback?.();
 
                 if (event.defaultPrevented) {
                     console.warn("use-selectify: Event prevented, stopping execution.");
@@ -913,8 +921,9 @@ function useSelectify<T extends HTMLElement>(
     useEventListener(ref.current, "pointerdown", handleDrawRectStart, {
         passive: false,
     });
-    useEventListener(ownerDocument, "pointercancel", cancelRectDraw);
     useEventListener(ownerDocument, "blur", cancelRectDraw);
+    useEventListener(ownerDocument, "contextmenu", cancelRectDraw);
+    useEventListener(ownerDocument, "pointercancel", cancelRectDraw);
     useEventListener(ownerDocument, "pointerup", handleDrawRectEnd);
     useEventListener(ownerDocument, "pointerleave", handleDrawRectEnd);
     useEventListener(globalThis?.window, "resize", resetEventsCache);
@@ -966,41 +975,46 @@ function useSelectify<T extends HTMLElement>(
 
     /* ---------------------------------------------------------------------------------------------- */
 
-    const SelectBoxOutlet = (props: React.ComponentPropsWithoutRef<"div">) => {
-        if (process.env.NODE_ENV === "development" && ref.current) {
-            if (ref.current.scrollWidth > ref.current.clientWidth && !autoScroll) {
-                console.warn(
-                    `use-selectify: <${ref.current.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
+    const SelectBoxOutlet = React.forwardRef<HTMLDivElement, SelectionComponentElement>(
+        (props: SelectionComponentElement, forwardedRef) => {
+            if (process.env.NODE_ENV === "development" && ref.current) {
+                if (ref.current.scrollWidth > ref.current.clientWidth && !autoScroll) {
+                    console.warn(
+                        `use-selectify: <${ref.current.tagName}> can scroll but autoScroll is disabled. Users might not be able to scroll and select at the same time. 
                         Consider enabling autoScroll.`
-                );
+                    );
+                }
             }
+
+            const composedRefs = useComposedRefs(forwardedRef, intersectBoxRef);
+
+            if (disabled) {
+                return null;
+            }
+
+            const selectionBoxProps = {
+                ...props,
+                ref: composedRefs,
+                parentRef: ref,
+                selectionBox: selectionBox,
+                isDragging: isActive,
+                overlappedElementsCount: selectedElements.length,
+                label: label,
+                forceMount: forceMount,
+                suppressHydrationWarning: true,
+            };
+
+            return lazyLoad ? (
+                <React.Suspense>
+                    <LazySelectionBox {...selectionBoxProps} />
+                </React.Suspense>
+            ) : (
+                <SelectionBox {...selectionBoxProps} />
+            );
         }
+    );
 
-        if (disabled) {
-            return null;
-        }
-
-        const selectionBoxProps = {
-            ...props,
-            ref: intersectBoxRef,
-            parentRef: ref,
-            selectionBox: selectionBox,
-            isDragging: isActive,
-            overlappedElementsCount: selectedElements.length + 1,
-            theme: theme,
-            label: label,
-            forceMount: forceMount,
-            suppressHydrationWarning: true,
-        };
-
-        return lazyLoad ? (
-            <React.Suspense>
-                <LazySelectionBox {...selectionBoxProps} />
-            </React.Suspense>
-        ) : (
-            <SelectionBox {...selectionBoxProps} />
-        );
-    };
+    SelectBoxOutlet.displayName = SELECTION_BOX_NAME;
 
     SelectBoxOutlet.displayName = SELECT_BOX_NAME;
 
