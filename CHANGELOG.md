@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Core Changes
 
+-   Added new auxiliary magnifier component for mobile users (See [accessibility](/README.md#accessibility-optional))
 -   Fixed parent's margin not being taken into for account for positioning
 -   Fixed unnecessary calculations on pointerdown
 -   Fixed unnecessary forced rerenders on the outlet component

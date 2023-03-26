@@ -165,10 +165,147 @@ function promiseWrapper(promise: { default: React.ComponentType<any> }): Promise
 const LazySelectionBox = React.lazy(() => promiseWrapper({ default: SelectionBox }));
 
 /* -------------------------------------------------------------------------------------------------
- * Selectify Hook
+ * SelectionMagnifier
  * -----------------------------------------------------------------------------------------------*/
 
-const DEFAULT_SELECT_CRITERIA = "*";
+const SELECTION_MAGNIFIER_ROOT_NAME = "SelectionMagnifierRoot";
+const DEFAULT_MAGNIFYING_ZOOM = 2;
+
+interface SelectionMagnifierRootProps extends SelectionComponentElement {
+    parentRef: React.RefObject<HTMLElement | null | undefined>;
+    selectionBox: BoxBoundingPosition | null;
+    isDragging: boolean;
+    forceMount?: true;
+}
+
+const magnifierLensStyle: React.CSSProperties = {
+    position: "absolute",
+    zIndex: "999",
+    pointerEvents: "none",
+    overflow: "hidden",
+    width: "6rem",
+    height: "4rem",
+} as const;
+
+const magnifierContentStyle: React.CSSProperties = {
+    position: "absolute",
+    overflow: "visible",
+    display: "block",
+    transformOrigin: "left top",
+    userSelect: "none",
+    transform: `scale(${DEFAULT_MAGNIFYING_ZOOM})`,
+} as const;
+
+const SELECTION_MAGNIFIER_NAME = "SelectionMagnifierOutlet";
+
+interface SelectionMagnifierProps extends SelectionComponentElement {
+    disabled?: boolean;
+    forceMount?: true;
+}
+const DEFAULT_TOUCH_POINT_TOP_OFFSET = 36;
+
+const SelectionMagnifierRoot = React.forwardRef<HTMLDivElement, SelectionMagnifierRootProps>(
+    (props: SelectionMagnifierRootProps, forwardedRef) => {
+        const {
+            parentRef,
+            selectionBox,
+            isDragging,
+            forceMount,
+            children,
+            ...selectionMagnifierProps
+        } = props;
+        const ref = React.useRef<HTMLDivElement>(null);
+        const composedRefs = useComposedRefs(forwardedRef, ref);
+        const canRender = selectionBox !== null && isDragging;
+
+        const [lensPosition, setLensPosition] = React.useState<{
+            left: number;
+            top: number;
+        } | null>(null);
+        const calculateLensPosition = React.useCallback(
+            () => ({
+                left:
+                    (selectionBox?.left ?? 0) +
+                    (selectionBox?.width ?? 0) -
+                    (ref.current?.clientWidth ?? 0) / 2,
+                top:
+                    (selectionBox?.top ?? 0) +
+                    (selectionBox?.height ?? 0) -
+                    (ref.current?.clientHeight ?? 0) -
+                    DEFAULT_TOUCH_POINT_TOP_OFFSET,
+            }),
+            [selectionBox?.height, selectionBox?.left, selectionBox?.top, selectionBox?.width]
+        );
+
+        const [magnifiedContentPosition, setMagnifiedContentPosition] = React.useState<{
+            left: number;
+            top: number;
+        } | null>(null);
+        const calculateMagnifiedContentPosition = React.useCallback(
+            () => ({
+                left:
+                    -(lensPosition?.left ?? 0) * DEFAULT_MAGNIFYING_ZOOM -
+                    (parentRef.current?.scrollLeft ?? 0) * DEFAULT_MAGNIFYING_ZOOM -
+                    (ref.current?.clientWidth ?? 0) / 2,
+                top:
+                    -(lensPosition?.top ?? 0) * DEFAULT_MAGNIFYING_ZOOM -
+                    (parentRef.current?.scrollTop ?? 0) * DEFAULT_MAGNIFYING_ZOOM -
+                    DEFAULT_TOUCH_POINT_TOP_OFFSET * 2 * DEFAULT_MAGNIFYING_ZOOM +
+                    DEFAULT_TOUCH_POINT_TOP_OFFSET,
+            }),
+            [lensPosition?.left, lensPosition?.top, parentRef]
+        );
+
+        useIsomorphicLayoutEffect(() => {
+            // Run just after the set ref phase but before repaint
+            setLensPosition(calculateLensPosition());
+            setMagnifiedContentPosition(calculateMagnifiedContentPosition());
+        }, [calculateLensPosition, calculateMagnifiedContentPosition]);
+
+        return (
+            <>
+                {children}
+                {canRender && !forceMount ? (
+                    <div
+                        {...selectionMagnifierProps}
+                        ref={composedRefs}
+                        aria-hidden="true"
+                        style={{
+                            ...magnifierLensStyle,
+                            ...lensPosition,
+                            ...props.style,
+                        }}
+                    >
+                        <div
+                            style={{
+                                ...magnifierContentStyle,
+                                ...magnifiedContentPosition,
+                                width: parentRef.current?.clientWidth ?? 0,
+                                height: parentRef.current?.clientHeight ?? 0,
+                            }}
+                        >
+                            <div
+                                unselectable="on"
+                                style={{
+                                    /** `display: table` ensures our content div will match the size of its children in both
+                                     * horizontal and vertical axis. This doesn't account for children with *percentage*
+                                     * widths that change.
+                                     */
+                                    display: "table",
+                                    pointerEvents: "none",
+                                }}
+                            >
+                                {children}
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
+            </>
+        );
+    }
+);
+
+SelectionMagnifierRoot.displayName = SELECTION_MAGNIFIER_ROOT_NAME;
 
 /* -------------------------------------------------------------------------------------------------
  * Selectify Hook
@@ -1016,11 +1153,35 @@ function useSelectify<T extends HTMLElement>(
 
     SelectBoxOutlet.displayName = SELECTION_BOX_NAME;
 
-    SelectBoxOutlet.displayName = SELECT_BOX_NAME;
+    const SelectionMagnifier = React.forwardRef<HTMLDivElement, SelectionMagnifierProps>(
+        (props: SelectionMagnifierProps, forwardedRef) => {
+            const { disabled, forceMount, children, ...selectionMagnifierProps } = props;
+
+            if (disabled) {
+                return null;
+            }
+
+            return (
+                <SelectionMagnifierRoot
+                    {...selectionMagnifierProps}
+                    ref={forwardedRef}
+                    parentRef={ref}
+                    selectionBox={selectionBox}
+                    isDragging={isActive}
+                    forceMount={forceMount}
+                >
+                    {children}
+                </SelectionMagnifierRoot>
+            );
+        }
+    );
+
+    SelectionMagnifier.displayName = SELECTION_MAGNIFIER_NAME;
 
     return {
         SelectBoxOutlet,
         selectedElements,
+        SelectionMagnifier,
         isDragging: isActive,
         hasSelected,
         selectionBox,

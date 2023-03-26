@@ -76,6 +76,7 @@ Import the `useSelectify` hook. Both default and named imports are supported.
 ```tsx
 import { useSelectify } from "use-selectify";
 ```
+
 ## Anatomy
 
 ```tsx
@@ -461,13 +462,13 @@ export function App() {
 | selectionDelay          | number                                                   | 0                | Specify a delay in miliseconds before elements are selected to prevent accidental selection.                                                            |
 | label                   | string                                                   | "Drag Selection" | Accessible label for screen readers.                                                                                                                    |
 | selectionTolerance      | number                                                   | 0                | Distance in px from which elements can be selected even if the selection box is not visually intersecting.                                              |
-| activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl/Cmd and Alt.         |
-| activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag. Ex: ["Tab", "Control", "Alt"]                                                      |
+| activateOnMetaKey       | boolean                                                  | false            | Only enables the selection box if the user was pressing a meta key while initiating the drag. Included Meta keys are: Shift, Ctrl/Cmd and Alt.          |
+| activateOnKey           | string[]                                                 | []               | Only enables the selection box if the user was pressing a specified key while initiating the drag. Ex: ["Tab", "Control", "Alt"]                        |
 | theme                   | "default" \| "outline"                                   | "default"        | Included theme options for the selection box appearance.                                                                                                |
 | hideOnScroll            | boolean                                                  | false            | Whether to hide the selection box when the window starts scrolling. Incompatible with autoScroll.                                                       |
 | exclusionZone           | Element \| Element[] \| string                           | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements.                                                |
 | scrollContext           | HTMLElement \| Window                                    | `window`         | Sets the scrollable element for the automatic window scrolling to react.                                                                                |
-| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements. Supports CSS Selectors.                                                |
+| exclusionZone           | Element \| Element[]                                     | -                | Won't enable the selection box if the user tries initiating the drag from one of the specified elements. Supports CSS Selectors.                        |
 | lazyLoad                | boolean                                                  | false            | Defers loading the selection box.                                                                                                                       |
 | disabled                | boolean                                                  | false            | Disables the selection box interaction & dragging.                                                                                                      |
 | forceMount              | boolean                                                  | false            | Forces the mounting of the selection box on initialization.                                                                                             |
@@ -496,6 +497,34 @@ By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/WCAG2
 2. Make elements focusable: To ensure that keyboard-only users can access and select the elements, all functionality should be also operable through the [keyboard alone](http://www.w3.org/TR/WCAG20/#keyboard-operation). Ensure that every selectable element is also focusable. This means either adding a tabindex attribute to the element and setting it to 0 or using an element that is focusable by default.
 
 3. Arrow navigation: Make sure every selectable element can also be selected using the arrow keys.
+
+---
+
+<img align="right" width="243" height="408" src="https://i.imgur.com/lSJlQrq.gif" alt="preview">
+
+[BETA] Additionally you can also enhance your app's mobile experience by using the `SelectionMagnifier` component which can display what is being selected with greater precision without the finger covering elements.
+
+```tsx
+import * as React from "react";
+import { isMobile } from "react-device-detect";
+import { useSelectify } from "use-selectify";
+
+export default function App() {
+    const selectionContainerRef = React.useRef(null);
+    const { SelectBoxOutlet, SelectionMagnifier } = useSelectify(selectionContainerRef);
+
+    return (
+        <div ref={selectionContainerRef} style={{ position: "relative" }}>
+            <SelectionMagnifier disabled={!isMobile}>
+                <div>Hello World</div>
+            </SelectionMagnifier>
+            <SelectBoxOutlet />
+        </div>
+    );
+}
+```
+
+---
 
 ## FAQ
 
