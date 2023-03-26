@@ -47,7 +47,7 @@ export default function Page() {
             >
               Documentation <ExternalLink className="ml-2 h-4 w-4" />
             </Button>
-            <Button href="/docs/example" variant="ghost">
+            <Button href="/docs/examples" variant="ghost">
               Explore examples
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
