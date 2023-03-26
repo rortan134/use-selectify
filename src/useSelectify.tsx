@@ -170,12 +170,6 @@ const LazySelectionBox = React.lazy(() => promiseWrapper({ default: SelectionBox
 
 const DEFAULT_SELECT_CRITERIA = "*";
 
-/* -------------------------------------------------------------------------------------------------
- * Selectify Hook
- * -----------------------------------------------------------------------------------------------*/
-
-const DEFAULT_SELECT_CRITERIA = "*";
-
 export interface UseSelectProps {
     /**
      * Maximum number of elements that can be selected.
@@ -1013,8 +1007,6 @@ function useSelectify<T extends HTMLElement>(
             );
         }
     );
-
-    SelectBoxOutlet.displayName = SELECTION_BOX_NAME;
 
     SelectBoxOutlet.displayName = SELECTION_BOX_NAME;
 
