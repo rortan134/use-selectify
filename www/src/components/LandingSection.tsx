@@ -24,7 +24,7 @@ export default function LandingSection({
   return (
     <div
       ref={selectionContainerRef}
-      className="relative h-full w-full md:select-none"
+      className="relative min-h-screen h-full w-full md:select-none"
     >
       {children}
       <SelectBoxOutlet className="border border-dashed border-neutral-50/40 bg-slate-50/10 rounded" />
