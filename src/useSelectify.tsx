@@ -1,6 +1,6 @@
 "use client";
 
-import "./styles/index.css";
+import "./style.css";
 
 import * as React from "react";
 
@@ -33,7 +33,7 @@ const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutE
  * -----------------------------------------------------------------------------------------------*/
 
 const SELECTION_LABEL_NAME = "SelectionBoxLabel";
-const DEFAULT_SCREEN_READER_LABEL = "Drag Selection";
+const DEFAULT_SCREEN_READER_LABEL = "Drag selection";
 
 const srOnlyStyles = {
     position: "absolute",
@@ -69,13 +69,12 @@ SelectionLabel.displayName = SELECTION_LABEL_NAME;
  * -----------------------------------------------------------------------------------------------*/
 
 const SELECTION_BOX_NAME = "SelectionBoxOutlet";
-const SELECTION_BOX_IDENTIFIER = "selectify-selection-box-wrapper";
 
 const DEFAULT_THEME = "selectify_selection-box_default-theme";
 
 type SelectionComponentElement = React.ComponentPropsWithoutRef<"div">;
 
-interface SelectionComponentProps extends SelectionComponentElement {
+export interface SelectionComponentProps extends SelectionComponentElement {
     parentRef: React.RefObject<HTMLElement | null | undefined>;
     selectionBox: BoxBoundingPosition | null;
     isDragging: boolean;
@@ -129,7 +128,6 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
             <div
                 {...selectBoxProps}
                 ref={forwardedRef}
-                id={SELECTION_BOX_IDENTIFIER}
                 role="region"
                 tabIndex={-1}
                 aria-labelledby={boxId}
@@ -143,6 +141,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
                     ...selectionBox,
                     ...props.style,
                 }}
+                selectify-container=""
             >
                 <SelectionLabel id={boxId} label={props.label}>
                     {liveText}
@@ -392,8 +391,8 @@ function useSelectify<T extends HTMLElement>(
             ) as Element[];
 
             // Filter out the selection box element to not include it in the response
-            const filteredMatchingElements = matchingElements.filter(
-                (el) => el.id !== SELECTION_BOX_IDENTIFIER
+            const filteredMatchingElements = matchingElements.filter((el) =>
+                el.hasAttribute("selectify-container")
             );
 
             return maxSelections
