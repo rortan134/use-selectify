@@ -33,7 +33,7 @@
 
 Drag interactions are one of the most challenging aspects of the web. Having complete control over the exact behavior of those interactions is essential, yet most available libraries out there still feel like they are not up to the task.
 
-Recognizing this need, `use-selectify` was created aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
+Recognizing this need, I created `use-selectify` aiming to address those issues and provide a powerful starting point for drag interactions while still remaining a robust approach to complex selections of elements in a React application, all done through a hook.
 
 Demo & Examples: [useselectify.js.org](https://useselectify.js.org/)
 

@@ -53,14 +53,14 @@ interface SelectionLabelProps extends React.ComponentPropsWithoutRef<"span"> {
     children: React.ReactNode;
 }
 
-const SelectionLabel = React.memo(({ id, label, children }: SelectionLabelProps) => {
+const SelectionLabel = ({ id, label, children }: SelectionLabelProps) => {
     const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
     return (
         <span id={id} aria-live="assertive" style={srOnlyStyles}>
             {screenReaderLabel}: {children}
         </span>
     );
-});
+};
 
 SelectionLabel.displayName = SELECTION_LABEL_NAME;
 
@@ -102,7 +102,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
             React.startTransition(() => {
                 // Handle label
                 if (wasDragActiveRef.current) {
-                    setLiveText("Off");
+                    setLiveText("Selection off");
                     return;
                 }
                 setLiveText(`${overlappedElementsCount} elements selected`);
