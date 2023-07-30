@@ -498,6 +498,34 @@ By default use-selectify already follows [WAI-ARIA](https://www.w3.org/WAI/WCAG2
 
 3. Arrow navigation: Make sure every selectable element can also be selected using the arrow keys.
 
+---
+
+<img align="right" width="243" height="408" src="https://i.imgur.com/lSJlQrq.gif" alt="preview">
+
+[BETA] Additionally you can also enhance your app's mobile experience by using the `SelectionMagnifier` component which can display what is being selected with greater precision without the finger covering elements.
+
+```tsx
+import * as React from "react";
+import { isMobile } from "react-device-detect";
+import { useSelectify } from "use-selectify";
+
+export default function App() {
+    const selectionContainerRef = React.useRef(null);
+    const { SelectBoxOutlet, SelectionMagnifier } = useSelectify(selectionContainerRef);
+
+    return (
+        <div ref={selectionContainerRef} style={{ position: "relative" }}>
+            <SelectionMagnifier disabled={!isMobile}>
+                <div>Hello World</div>
+            </SelectionMagnifier>
+            <SelectBoxOutlet />
+        </div>
+    );
+}
+```
+
+---
+
 ## FAQ
 
 ### How performant is it?
