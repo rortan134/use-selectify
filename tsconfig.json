@@ -3,7 +3,7 @@
         "target": "es2018",
         "lib": ["dom", "dom.iterable", "es2018"],
         "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "node",
         "moduleDetection": "force",
         "jsx": "react",
         "useDefineForClassFields": true,
