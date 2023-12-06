@@ -810,9 +810,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleDrawRectStart = React.useCallback(
         async (event: PointerEvent) => {
-            if (disabled || !IS_BROWSER) {
-                return;
-            }
+            if (disabled || !IS_BROWSER) return;
 
             const parentNode = ref.current;
             const shouldActivate = event.button === 0 || event.button === 1 || event.isPrimary;
@@ -833,6 +831,7 @@ function useSelectify<T extends HTMLElement>(
                 if (await isInExclusionZone(eventStartingPoint)) {
                     return;
                 }
+                hasDraggedOnceRef.current = true;
 
                 // Prevent implicit pointer capture
                 // https://www.w3.org/TR/pointerevents3/#implicit-pointer-capture
@@ -849,7 +848,7 @@ function useSelectify<T extends HTMLElement>(
                 consumerCallback?.();
 
                 if (event.defaultPrevented) {
-                    console.warn("use-selectify: Event prevented, stopping execution.");
+                    console.log("use-selectify: Event prevented, stopping execution.");
                     return;
                 }
 
@@ -862,7 +861,7 @@ function useSelectify<T extends HTMLElement>(
                     capture: true,
                     once: true,
                 });
-                window.addEventListener("scroll", handleScroll);
+                globalThis?.window.addEventListener("scroll", handleScroll);
 
                 // Add event to cache
                 eventsCacheRef.current.push(event);
