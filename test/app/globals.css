@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+    @apply overflow-hidden;
+}
+
+html {
+    height: -webkit-fill-available;
+}
+
+a, button {
+    user-select: none;
+}

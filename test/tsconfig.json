@@ -3,7 +3,7 @@
         "target": "es2018",
         "lib": ["dom", "dom.iterable", "es2018"],
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "moduleDetection": "force",
         "jsx": "react",
         "useDefineForClassFields": true,
@@ -12,7 +12,6 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "sourceMap": true,
         "composite": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
@@ -22,15 +21,10 @@
         "esModuleInterop": true,
         "incremental": true,
         "noUncheckedIndexedAccess": true,
-        "declarationMap": true,
         "strictNullChecks": true,
         "baseUrl": ".",
-        "paths": {
-            "use-selectify": ["src/index.ts"]
-        },
-        "typeRoots": ["node_modules/@types", "src/index.d.ts"]
+        "plugins": [{ "name": "next" }]
     },
-    "include": ["src"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
     "exclude": ["node_modules"],
-    "references": [{ "path": "./tsconfig.node.json" }]
 }

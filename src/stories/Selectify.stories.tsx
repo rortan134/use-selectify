@@ -53,8 +53,7 @@ const Template = (args: UseSelectProps) => {
                         <div className="table-header-button">
                             <button
                                 onClick={hasSelected ? clearSelection : selectAll}
-                                data-active={!hasSelected}
-                            >
+                                data-active={!hasSelected}>
                                 -
                             </button>
                         </div>
@@ -73,8 +72,7 @@ const Template = (args: UseSelectProps) => {
                                         toggleItemSelection(
                                             e.currentTarget.parentElement // here we're getting the .table-item element to select
                                         )
-                                    }
-                                >
+                                    }>
                                     <img src={SelectedCheckIcon} />
                                 </button>
                                 <span>Articulated</span>
