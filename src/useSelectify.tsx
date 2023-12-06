@@ -5,7 +5,6 @@ import "./style.css";
 import * as React from "react";
 
 import { useComposedRefs } from "./utils/composeRefs";
-import { isNull } from "./utils/misc";
 import { useCallbackRef } from "./utils/useCallbackRef";
 import useEventListener from "./utils/useEventListener";
 
@@ -25,8 +24,18 @@ export type BoxBoundingPosition = {
 
 const NULL_OBJ: PositionPoint = Object.freeze({ x: null, y: null });
 
-const IS_SERVER = typeof window === "undefined";
-const useIsomorphicLayoutEffect = IS_SERVER ? React.useEffect : React.useLayoutEffect;
+const IS_BROWSER = typeof window !== "undefined";
+const useIsomorphicLayoutEffect = IS_BROWSER ? React.useLayoutEffect : React.useEffect;
+
+function hasNullProps(obj: Record<string, unknown>) {
+    return Object.values(obj).some((value) => {
+        if (value === null) {
+            return true;
+        }
+
+        return false;
+    });
+}
 
 /* -------------------------------------------------------------------------------------------------
  * SelectionLabel
@@ -116,8 +125,9 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
         // copy z-index from content to wrapper
         const [contentZIndex, setContentZIndex] = React.useState<string>();
         useIsomorphicLayoutEffect(() => {
-            if (parentRef.current)
+            if (parentRef.current) {
                 setContentZIndex(window.getComputedStyle(parentRef.current).zIndex);
+            }
         }, [parentRef]);
 
         if (!selectionBox) {
@@ -141,8 +151,7 @@ const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
                     ...selectionBox,
                     ...props.style,
                 }}
-                selectify-container=""
-            >
+                selectify-container="">
                 <SelectionLabel id={boxId} label={props.label}>
                     {liveText}
                 </SelectionLabel>
@@ -257,7 +266,7 @@ export interface UseSelectProps {
     onEscapeKeyDown?(e: KeyboardEvent): void;
 }
 
-function getSymetricDifference(arrA: Element[], arrB: Element[]) {
+function getSymmetricDifference(arrA: Element[], arrB: Element[]) {
     return arrA.filter((x) => !arrB.includes(x)).concat(arrB.filter((x) => !arrA.includes(x)));
 }
 
@@ -312,17 +321,19 @@ function useSelectify<T extends HTMLElement>(
     } = options || {};
     const ownerDocument = globalThis?.document;
 
-    const [boxStartingPoint, setBoxStartingPoint] = React.useState<PositionPoint>(NULL_OBJ);
+    const boxStartingPointRef = React.useRef<PositionPoint>(NULL_OBJ);
     const [boxEndingPoint, setBoxEndingPoint] = React.useState<PositionPoint>(NULL_OBJ);
     const [isActive, setIsActive] = React.useState(false);
     const [selectedElements, setSelectedElements] = React.useState<Element[]>([]);
 
     // Caching rect to not force reflows with getBoundingClientRect calls
     const parentNodeRectRef = React.useRef<DOMRect>();
-    const lastIntersectedElements = React.useRef<Element[]>([]);
+    const lastIntersectedElementsRef = React.useRef<Element[]>([]);
     const intersectBoxRef = React.useRef<HTMLDivElement>(null);
     const selectionTimerRef = React.useRef(0);
-    const intersectionDifference = React.useRef<Element[]>([]);
+    const hasDraggedOnceRef = React.useRef(false);
+    const intersectionDifferenceRef = React.useRef<Element[]>([]);
+
     const hasSelected = selectedElements.length > 0;
     const shouldDelaySelect = selectionDelay !== undefined && selectionDelay > 0;
 
@@ -335,11 +346,12 @@ function useSelectify<T extends HTMLElement>(
 
     const select = React.useCallback(
         (elementsToSelect: Element[]) => {
-            const difference = intersectionDifference.current;
-            const hasSelected = elementsToSelect.length > lastIntersectedElements.current.length;
-            const hasUnselected = elementsToSelect.length < lastIntersectedElements.current.length;
+            const difference = intersectionDifferenceRef.current;
+            const hasSelected = elementsToSelect.length > lastIntersectedElementsRef.current.length;
+            const hasUnselected =
+                elementsToSelect.length < lastIntersectedElementsRef.current.length;
 
-            if (difference.length === 0 || (disableUnselection && hasUnselected)) {
+            if (difference.length === 0 || (hasUnselected && disableUnselection)) {
                 return; // nothing to be selected
             }
 
@@ -351,7 +363,7 @@ function useSelectify<T extends HTMLElement>(
                 difference.forEach((element) => triggerUnselectEvent(element));
             }
 
-            lastIntersectedElements.current = elementsToSelect;
+            lastIntersectedElementsRef.current = elementsToSelect;
         },
         [disableUnselection, triggerSelectEvent, triggerUnselectEvent]
     );
@@ -432,7 +444,7 @@ function useSelectify<T extends HTMLElement>(
     const observedRectsRef = React.useRef<DOMRectReadOnly[]>([]);
     const observer = React.useMemo(
         () =>
-            !IS_SERVER
+            IS_BROWSER
                 ? new IntersectionObserver(
                       (entries, ob) => {
                           ob.disconnect();
@@ -480,7 +492,7 @@ function useSelectify<T extends HTMLElement>(
     const calculateSelectionBox = React.useCallback(
         (startPoint: PositionPoint, endPoint: PositionPoint) => {
             const parentNode = ref.current;
-            if (!parentNode || isNull(startPoint) || isNull(endPoint)) {
+            if (!parentNode || hasNullProps(startPoint) || hasNullProps(endPoint)) {
                 canSelectRef.current = false;
                 return null;
             }
@@ -501,8 +513,8 @@ function useSelectify<T extends HTMLElement>(
     );
 
     const selectionBox: BoxBoundingPosition | null = React.useMemo(
-        () => calculateSelectionBox(boxStartingPoint, boxEndingPoint),
-        [calculateSelectionBox, boxEndingPoint, boxStartingPoint]
+        () => calculateSelectionBox(boxStartingPointRef.current, boxEndingPoint),
+        [boxEndingPoint, calculateSelectionBox]
     );
 
     const matchingElementsRef = React.useRef<Element[] | undefined>([]);
@@ -517,9 +529,9 @@ function useSelectify<T extends HTMLElement>(
             selectionBoxRef.getBoundingClientRect(),
             matchingElementsRef.current
         );
-        intersectionDifference.current = getSymetricDifference(
+        intersectionDifferenceRef.current = getSymmetricDifference(
             intersectedElements,
-            lastIntersectedElements.current
+            lastIntersectedElementsRef.current
         );
 
         if (shouldDelaySelect) handleDelayedSelectionEvent(intersectedElements);
@@ -541,8 +553,8 @@ function useSelectify<T extends HTMLElement>(
                 window.clearTimeout(scrollTimerRef.current);
             }
 
-            const viewportX = event.clientX;
-            const viewportY = event.clientY;
+            const viewportX = event.screenX;
+            const viewportY = event.screenY;
             const viewportWidth = document.documentElement.clientWidth;
             const viewportHeight = document.documentElement.clientHeight;
 
@@ -649,8 +661,8 @@ function useSelectify<T extends HTMLElement>(
             if (!parentNodeRectRef.current) return;
             // Start drawing box
             setBoxEndingPoint({
-                x: event.clientX - parentNodeRectRef.current.left,
-                y: event.clientY - parentNodeRectRef.current.top,
+                x: event.screenX - parentNodeRectRef.current.left,
+                y: event.screenY - parentNodeRectRef.current.top,
             });
             setIsActive(true);
 
@@ -668,7 +680,7 @@ function useSelectify<T extends HTMLElement>(
                 });
             }
 
-            triggerOnDragMove(event, lastIntersectedElements.current);
+            triggerOnDragMove(event, lastIntersectedElementsRef.current);
         },
         [
             autoScroll,
@@ -690,7 +702,7 @@ function useSelectify<T extends HTMLElement>(
         window.removeEventListener("scroll", cancelRectDraw);
 
         // Reset default values
-        setBoxStartingPoint(NULL_OBJ);
+        boxStartingPointRef.current = NULL_OBJ;
         setBoxEndingPoint(NULL_OBJ);
         setIsActive(false);
         triggerOnDragEnd();
@@ -709,7 +721,6 @@ function useSelectify<T extends HTMLElement>(
         },
         [cancelRectDraw, ownerDocument, triggerOnEscapeKeyDown]
     );
-    [];
 
     const calculateParentNodeRect = React.useCallback(() => {
         const parentNode = ref.current;
@@ -735,14 +746,14 @@ function useSelectify<T extends HTMLElement>(
             }
             cancelRectDraw();
         }
-        // Recalculate new clientY position
+        // Recalculate new screenY position
         parentNodeRectRef.current = calculateParentNodeRect();
     }, [autoScroll, calculateParentNodeRect, cancelRectDraw, hideOnScroll]);
 
     const handleDrawRectEnd = React.useCallback(
         (event: PointerEvent) => {
             const parentNode = ref.current;
-            if (disabled || !parentNode || IS_SERVER) {
+            if (disabled || !parentNode || !IS_BROWSER) {
                 return;
             }
 
@@ -799,7 +810,7 @@ function useSelectify<T extends HTMLElement>(
 
     const handleDrawRectStart = React.useCallback(
         async (event: PointerEvent) => {
-            if (disabled || IS_SERVER) {
+            if (disabled || !IS_BROWSER) {
                 return;
             }
 
@@ -815,8 +826,8 @@ function useSelectify<T extends HTMLElement>(
             if (!activateOnMetaKey || (activateOnMetaKey && isModifierKey) || userKeyPressed) {
                 parentNodeRectRef.current = calculateParentNodeRect();
                 const eventStartingPoint = {
-                    x: event.clientX - parentNodeRectRef.current.left,
-                    y: event.clientY - parentNodeRectRef.current.top,
+                    x: event.screenX - parentNodeRectRef.current.left,
+                    y: event.screenY - parentNodeRectRef.current.top,
                 };
 
                 if (await isInExclusionZone(eventStartingPoint)) {
@@ -842,7 +853,7 @@ function useSelectify<T extends HTMLElement>(
                     return;
                 }
 
-                setBoxStartingPoint(eventStartingPoint);
+                boxStartingPointRef.current = eventStartingPoint;
 
                 parentNode.addEventListener("pointermove", handleDrawRectUpdate, {
                     passive: true,
@@ -881,23 +892,26 @@ function useSelectify<T extends HTMLElement>(
         if (!allElements) return;
 
         // Force selection events
-        intersectionDifference.current = allElements;
+        intersectionDifferenceRef.current = allElements;
         handleSelectionEvent(allElements);
     }, [findMatchingElements, handleSelectionEvent, ref, selectCriteria]);
 
     const clearSelection = React.useCallback(() => {
         // Force unselection events
-        intersectionDifference.current = getSymetricDifference([], lastIntersectedElements.current);
-        lastIntersectedElements.current = selectedElements;
+        intersectionDifferenceRef.current = getSymmetricDifference(
+            [],
+            lastIntersectedElementsRef.current
+        );
+        lastIntersectedElementsRef.current = selectedElements;
         handleSelectionEvent([]);
     }, [handleSelectionEvent, selectedElements]);
 
     const mutateSelections = React.useCallback(
         (update: ((lastSelected: readonly Element[]) => Element[]) | Element[]) => {
             const newSelection = update instanceof Function ? update(selectedElements) : update;
-            intersectionDifference.current = getSymetricDifference(
+            intersectionDifferenceRef.current = getSymmetricDifference(
                 newSelection,
-                lastIntersectedElements.current
+                lastIntersectedElementsRef.current
             );
             handleSelectionEvent(newSelection);
         },
@@ -998,9 +1012,11 @@ function useSelectify<T extends HTMLElement>(
             };
 
             return lazyLoad ? (
-                <React.Suspense>
-                    <LazySelectionBox {...selectionBoxProps} />
-                </React.Suspense>
+                hasDraggedOnceRef.current ? (
+                    <React.Suspense>
+                        <LazySelectionBox {...selectionBoxProps} />
+                    </React.Suspense>
+                ) : null
             ) : (
                 <SelectionBox {...selectionBoxProps} />
             );

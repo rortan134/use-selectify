@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 /**
  * A custom hook that converts a callback to a ref to avoid triggering re-renders when passed as a

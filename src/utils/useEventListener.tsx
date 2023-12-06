@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 export default function useEventListener<K extends keyof GlobalEventHandlersEventMap>(
     node: HTMLElement | Document | Window | null | undefined,
