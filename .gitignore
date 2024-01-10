@@ -4,6 +4,7 @@ yarn-debug.log*
 yarn-error.log*
 *.tsbuildinfo
 node_modules
+.eslintcache
 storybook-static
 *.local
 .DS_Store
