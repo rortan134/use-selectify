@@ -1,5 +1,3 @@
-"use client";
-
 import "./style.css";
 
 import * as React from "react";
@@ -32,7 +30,6 @@ function hasNullProps(obj: Record<string, unknown>) {
         if (value === null) {
             return true;
         }
-
         return false;
     });
 }
@@ -62,10 +59,10 @@ interface SelectionLabelProps extends React.ComponentPropsWithoutRef<"span"> {
     children: React.ReactNode;
 }
 
-const SelectionLabel = ({ id, label, children }: SelectionLabelProps) => {
+const SelectionLabel = ({ id, label, children, ...props }: SelectionLabelProps) => {
     const screenReaderLabel = label ?? DEFAULT_SCREEN_READER_LABEL;
     return (
-        <span id={id} aria-live="assertive" style={srOnlyStyles}>
+        <span {...props} id={id} aria-live="assertive" style={srOnlyStyles}>
             {screenReaderLabel}: {children}
         </span>
     );
@@ -92,7 +89,7 @@ export interface SelectionComponentProps extends SelectionComponentElement {
     forceMount?: true;
 }
 
-const SelectionBox = React.forwardRef<HTMLDivElement, SelectionComponentProps>(
+const SelectionBox = React.forwardRef<React.ElementRef<"div">, SelectionComponentProps>(
     (props: SelectionComponentProps, forwardedRef) => {
         const {
             parentRef,
@@ -250,10 +247,6 @@ export interface UseSelectProps {
      */
     exclusionZone?: Element | Element[] | string | null;
     hideOnScroll?: boolean;
-    /**
-     * @deprecated
-     */
-    theme?: "default";
     lazyLoad?: boolean;
     scrollContext?: HTMLElement | Window;
     disabled?: boolean;
@@ -290,7 +283,7 @@ let originalBodyUserSelect: string;
 
 function useSelectify<T extends HTMLElement>(
     ref: React.RefObject<T | undefined | null>,
-    options?: UseSelectProps
+    config?: UseSelectProps
 ) {
     const {
         selectCriteria = DEFAULT_SELECT_CRITERIA,
@@ -318,7 +311,7 @@ function useSelectify<T extends HTMLElement>(
         onEscapeKeyDown = () => {},
         disabled,
         forceMount,
-    } = options || {};
+    } = config ?? {};
     const ownerDocument = globalThis?.document;
 
     const boxStartingPointRef = React.useRef<PositionPoint>(NULL_OBJ);
@@ -343,6 +336,9 @@ function useSelectify<T extends HTMLElement>(
     const triggerOnDragMove = useCallbackRef(onDragMove);
     const triggerOnDragEnd = useCallbackRef(onDragEnd);
     const triggerOnEscapeKeyDown = useCallbackRef(onEscapeKeyDown);
+
+    // Refs to keep stable config and values
+    const configRef = React.useRef(config);
 
     const select = React.useCallback(
         (elementsToSelect: Element[]) => {
@@ -1036,7 +1032,7 @@ function useSelectify<T extends HTMLElement>(
         mutateSelections,
         cancelSelectionBox: cancelRectDraw,
         selectionBoxRef: intersectBoxRef,
-        options,
+        options: configRef.current,
     };
 }
 

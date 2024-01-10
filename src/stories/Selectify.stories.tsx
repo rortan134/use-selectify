@@ -1,7 +1,7 @@
 import { ComponentMeta, ComponentStory } from "@storybook/react";
 import * as React from "react";
 
-import { useSelectify, UseSelectProps } from "../useSelectify";
+import { useSelectify, UseSelectProps } from "../use-selectify";
 import SelectedCheckIcon from "./assets/check.svg";
 
 const Template = (args: UseSelectProps) => {
